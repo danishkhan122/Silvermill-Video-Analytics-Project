@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', 'Poppins', sans-serif; background: #f5f7fa; min-height: 100vh; display: flex; }
+        .sidebar {
+            width: 200px; min-width: 200px; height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0;
+            overflow-y: auto; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar > * { position: relative; z-index: 1; }
+        .logo-section { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; }
+        .logo-img { max-width: 100%; max-height: 120px; object-fit: contain; display: block; }
+        .nav-section { padding: 10px 0 20px; flex: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 12px 14px; margin: 4px 8px;
+            color: rgba(255,255,255,0.85); text-decoration: none; font-size: 12px; font-weight: 600;
+            border-radius: 8px; border-left: 3px solid transparent; transition: all 0.25s ease;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.12); color: #fff; border-left-color: rgba(255,255,255,0.5); }
+        .nav-item.active { background: linear-gradient(90deg, rgba(106,17,203,0.35) 0%, rgba(37,117,252,0.25) 100%); color: #fff; border-left-color: #a78bfa; }
+        .nav-icon { width: 20px; height: 20px; min-width: 20px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .user-section { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; }
+        .user-logo { max-width: 100%; max-height: 50px; object-fit: contain; display: block; }
+        .info-section { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 10px; color: rgba(255,255,255,0.7); }
+        .info-item { display: flex; justify-content: space-between; padding: 4px 0; }
+        .info-value { font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(106,17,203,0.2); padding: 2px 8px; border-radius: 4px; }
+        .main-content {
+            flex: 1; margin-left: 200px; padding: 0; min-height: 100vh; overflow-y: auto;
+            background: #f5f7fa; display: flex; flex-direction: column; position: relative;
+        }
+        .main-content::before {
+            content: ''; position: absolute; inset: 0;
+            background: url("{{ url_for('static', filename='images/coconut_tp.png') }}") no-repeat center bottom;
+            background-size: min(420px, 45vw) auto; opacity: 0.2; pointer-events: none; z-index: 0;
+        }
+        .top-header { background: #fff; padding: 12px 24px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+        .page-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .content-wrapper { padding: 20px 24px; flex: 1; max-width: 1200px; }
+        .sys-card {
+            background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #6a11cb;
+        }
+        .sys-card h2 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; }
+        .sys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+        .sys-item { padding: 10px 12px; background: #f9fafb; border-radius: 8px; font-size: 12px; }
+        .sys-item-label { font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+        .sys-item-value { font-weight: 600; color: #1a1a2e; }
+        .events-list { max-height: 400px; overflow-y: auto; }
+        .event-entry {
+            display: flex; align-items: flex-start; gap: 10px; padding: 12px; margin-bottom: 8px;
+            background: #f9fafb; border-radius: 8px; font-size: 12px; border-left: 4px solid #d1d5db;
+        }
+        .event-entry.success { border-left-color: #10b981; }
+        .event-entry.error { border-left-color: #ef4444; }
+        .event-entry.warning { border-left-color: #f59e0b; }
+        .event-entry.info { border-left-color: #3b82f6; }
+        .event-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .event-icon.success { background: #d1fae5; color: #065f46; }
+        .event-icon.error { background: #fee2e2; color: #991b1b; }
+        .event-icon.warning { background: #fef3c7; color: #92400e; }
+        .event-icon.info { background: #dbeafe; color: #1e40af; }
+        .event-msg { flex: 1; font-weight: 500; color: #1a1a2e; }
+        .event-time { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+        .sys-card.highlight { border-left-color: #10b981; }
+        .sys-card.warning { border-left-color: #f59e0b; }
+        .sys-subtitle { font-size: 12px; color: #6b7280; margin-bottom: 12px; font-weight: 500; }
+        .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .filter-row label { font-size: 12px; font-weight: 600; color: #4b5563; }
+        .filter-row input[type="date"], .filter-row select { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 12px; }
+        .filter-row button { padding: 8px 16px; background: #6a11cb; color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .filter-row button:hover { background: #5a0fb3; }
+        .history-list { max-height: 450px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SilverMill" class="logo-img">
+        </div>
+        <div class="nav-section">
+            <a href="/" class="nav-item"><div class="nav-icon">◉</div><span>Dashboard</span></a>
+            <a href="/live_camera" class="nav-item"><div class="nav-icon">▶</div><span>Live Cameras</span></a>
+            <a href="/coconut_count" class="nav-item"><div class="nav-icon">◎</div><span>Coconut Count</span></a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item"><div class="nav-icon">▣</div><span>Truck Verification</span></a>
+            <a href="/weight_check" class="nav-item"><div class="nav-icon">☰</div><span>Coconut Summary</span></a>
+            <a href="/truck_summary" class="nav-item"><div class="nav-icon">▤</div><span>Truck Summary</span></a>
+            <a href="/system" class="nav-item active"><div class="nav-icon">⚙</div><span>System</span></a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item"><div class="nav-icon">⎋</div><span>Logout</span></a>
+            {% else %}
+            <a href="/login" class="nav-item"><div class="nav-icon">🔐</div><span>Login</span></a>
+            {% endif %}
+        </div>
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="User" class="user-logo">
+        </div>
+        <div class="info-section">
+            <div class="info-item"><span>Version</span><span class="info-value">v2.1.0</span></div>
+            <div class="info-item"><span>Status</span><span class="info-value">Online</span></div>
+            <div class="info-item"><span>Build</span><span class="info-value">2024.12</span></div>
+            <div class="info-item"><span>© 2024</span><span class="info-value">SilverMill</span></div>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="top-header">
+            <h1 class="page-title">System</h1>
+        </div>
+        <div class="content-wrapper">
+            <div class="sys-card">
+                <h2>System &amp; Project Details</h2>
+                <div class="sys-grid" id="systemDetailsGrid">
+                    <div class="sys-item"><div class="sys-item-label">Project</div><div class="sys-item-value" id="sysProject">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Version / Build</div><div class="sys-item-value" id="sysVersion">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Status</div><div class="sys-item-value" id="sysStatus">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Uptime</div><div class="sys-item-value" id="sysUptime">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">OS / Python</div><div class="sys-item-value" id="sysPlatform">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Database</div><div class="sys-item-value" id="sysDatabase">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Coconut Detection</div><div class="sys-item-value" id="sysDetection">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Cameras</div><div class="sys-item-value" id="sysCameras">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">CPU / RAM</div><div class="sys-item-value" id="sysCpuRam">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">GPU</div><div class="sys-item-value" id="sysGpu">—</div></div>
+                </div>
+            </div>
+            <div class="sys-card highlight">
+                <h2>Coconut Model Usage</h2>
+                <div class="sys-subtitle">Admin view: how many times the coconut counting model has been started and how long it has been running.</div>
+                <div class="sys-grid" id="coconutModelGrid">
+                    <div class="sys-item"><div class="sys-item-label">Times model started (lifetime)</div><div class="sys-item-value" id="coconutModelStartCount">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Current status</div><div class="sys-item-value" id="coconutModelStatus">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Running duration (this session)</div><div class="sys-item-value" id="coconutModelRunDuration">—</div></div>
+                </div>
+            </div>
+            <div class="sys-card warning">
+                <h2>Server / PC Status</h2>
+                <div class="sys-subtitle">Application and machine state: when the server started, uptime, and last shutdown.</div>
+                <div class="sys-grid" id="serverPcGrid">
+                    <div class="sys-item"><div class="sys-item-label">PC / Server</div><div class="sys-item-value" id="serverPcState">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Running since</div><div class="sys-item-value" id="serverRunningSince">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Application uptime</div><div class="sys-item-value" id="serverUptime">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Last shutdown</div><div class="sys-item-value" id="serverLastShutdown">—</div></div>
+                </div>
+            </div>
+            <div class="sys-card">
+                <h2>System Events (current session)</h2>
+                <div class="sys-subtitle">Live system and application updates: model start/stop, server boot, cache clear, etc.</div>
+                <div class="events-list" id="systemEventsList">
+                    <div style="padding:20px;text-align:center;color:#9ca3af;" id="eventsEmpty">Loading…</div>
+                </div>
+            </div>
+            <div class="sys-card">
+                <h2>System History (from database)</h2>
+                <div class="sys-subtitle">View previous system events. Use filters and click Load history to check past activity.</div>
+                <div class="filter-row">
+                    <label>From date</label>
+                    <input type="date" id="historyFromDate">
+                    <label>To date</label>
+                    <input type="date" id="historyToDate">
+                    <label>Event type</label>
+                    <select id="historyEventType">
+                        <option value="">All</option>
+                        <option value="app_start">Application start</option>
+                        <option value="app_shutdown">Application shutdown</option>
+                        <option value="coconut_model_start">Coconut model start</option>
+                        <option value="coconut_model_stop">Coconut model stop</option>
+                        <option value="cache_clear">Cache clear</option>
+                        <option value="general">General</option>
+                    </select>
+                    <button type="button" id="loadHistoryBtn">Load history</button>
+                </div>
+                <div class="history-list" id="systemHistoryList">
+                    <div style="padding:20px;text-align:center;color:#9ca3af;" id="historyEmpty">Set dates and click Load history</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function formatUptime(sec) {
+            if (sec < 60) return sec + 's';
+            if (sec < 3600) return Math.floor(sec / 60) + 'm ' + (sec % 60) + 's';
+            var h = Math.floor(sec / 3600);
+            var m = Math.floor((sec % 3600) / 60);
+            if (h < 24) return h + 'h ' + m + 'm';
+            var d = Math.floor(h / 24);
+            return d + 'd ' + (h % 24) + 'h ' + m + 'm';
+        }
+        function formatEventTime(iso) {
+            if (!iso) return '—';
+            var d = new Date(iso);
+            var now = new Date();
+            var diff = (now - d) / 1000;
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        function updateSystemPage() {
+            fetch('/api/dashboard_info')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var d = data.load || {};
+                    var p = data.project || {};
+                    function set(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+                    set('sysProject', p.name || 'SilverMill');
+                    set('sysVersion', (p.version || '—') + ' / ' + (p.build || '—'));
+                    set('sysStatus', p.status || 'Online');
+                    set('sysUptime', formatUptime(data.uptime_seconds || 0));
+                    var sys = data.system || {};
+                    set('sysPlatform', (sys.platform || '—') + ' / Python ' + (sys.python || '—'));
+                    var db = data.database || {};
+                    set('sysDatabase', db.ok ? 'OK' : 'Not available');
+                    var det = data.detection || {};
+                    var detStr = det.enabled ? 'On' : 'Off';
+                    if (det.enabled && det.started_at) {
+                        var start = new Date(det.started_at);
+                        detStr += ' — ' + formatUptime(Math.floor((Date.now() - start.getTime()) / 1000));
+                    }
+                    set('sysDetection', detStr);
+                    set('sysCameras', (data.cameras_active || 0) + ' / ' + (data.cameras_total || 10) + ' active');
+                    set('sysCpuRam', (d.cpu_pct != null ? 'CPU ' + Math.round(d.cpu_pct) + '%' : '') + (d.ram_pct != null ? ' | RAM ' + Math.round(d.ram_pct) + '%' : '') || '—');
+                    set('sysGpu', (d.gpu_util != null ? d.gpu_util + ' ' : '') + (d.gpu_mem_used != null && d.gpu_mem_total != null ? d.gpu_mem_used + '/' + d.gpu_mem_total + ' MB' : d.gpu_mem_used != null ? d.gpu_mem_used + ' MB' : '') || '—');
+                    // Coconut model usage (from database + detection state)
+                    set('coconutModelStartCount', (data.coconut_model_start_count != null ? data.coconut_model_start_count : 0).toLocaleString());
+                    set('coconutModelStatus', det.enabled ? 'On' : 'Off');
+                    if (det.enabled && det.started_at) {
+                        var runSec = Math.floor((Date.now() - new Date(det.started_at).getTime()) / 1000);
+                        set('coconutModelRunDuration', formatUptime(runSec));
+                    } else {
+                        set('coconutModelRunDuration', '—');
+                    }
+                    // Server / PC status
+                    set('serverPcState', 'Running');
+                    set('serverUptime', formatUptime(data.uptime_seconds || 0));
+                    if (data.app_started_at) {
+                        var started = new Date(data.app_started_at);
+                        set('serverRunningSince', started.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }));
+                    } else {
+                        set('serverRunningSince', '—');
+                    }
+                    if (data.last_shutdown_at) {
+                        var shut = new Date(data.last_shutdown_at);
+                        set('serverLastShutdown', formatEventTime(data.last_shutdown_at) + ' (' + shut.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) + ')');
+                    } else {
+                        set('serverLastShutdown', '—');
+                    }
+                    var events = data.system_events || [];
+                    var listEl = document.getElementById('systemEventsList');
+                    var emptyEl = document.getElementById('eventsEmpty');
+                    if (events.length === 0) {
+                        if (emptyEl) emptyEl.textContent = 'No system events yet';
+                        listEl.querySelectorAll('.event-entry').forEach(function(n) { n.remove(); });
+                    } else {
+                        if (emptyEl) emptyEl.remove();
+                        listEl.querySelectorAll('.event-entry').forEach(function(n) { n.remove(); });
+                        events.slice().reverse().forEach(function(ev) {
+                            var cls = ev.level || 'info';
+                            var icon = cls === 'success' ? '✓' : cls === 'error' ? '!' : cls === 'warning' ? '!' : 'i';
+                            var div = document.createElement('div');
+                            div.className = 'event-entry ' + cls;
+                            div.innerHTML = '<div class="event-icon ' + cls + '">' + icon + '</div><div><div class="event-msg">' + (ev.message || '').replace(/</g, '&lt;') + '</div><div class="event-time">' + formatEventTime(ev.time) + '</div></div>';
+                            listEl.appendChild(div);
+                        });
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('eventsEmpty').textContent = 'Unable to load system info';
+                });
+        }
+        function loadSystemHistory() {
+            var fromEl = document.getElementById('historyFromDate');
+            var toEl = document.getElementById('historyToDate');
+            var typeEl = document.getElementById('historyEventType');
+            var listEl = document.getElementById('systemHistoryList');
+            var emptyEl = document.getElementById('historyEmpty');
+            var fromDate = fromEl && fromEl.value ? fromEl.value : '';
+            var toDate = toEl && toEl.value ? toEl.value : '';
+            var eventType = typeEl && typeEl.value ? typeEl.value : '';
+            var params = new URLSearchParams();
+            if (fromDate) params.set('from_date', fromDate);
+            if (toDate) params.set('to_date', toDate);
+            if (eventType) params.set('event_type', eventType);
+            params.set('limit', '500');
+            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#6b7280;">Loading…</div>';
+            fetch('/api/system_events_history?' + params.toString())
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var events = data.events || [];
+                    listEl.innerHTML = '';
+                    if (events.length === 0) {
+                        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;" id="historyEmpty">No events found for this filter</div>';
+                        return;
+                    }
+                    events.forEach(function(ev) {
+                        var cls = ev.level || 'info';
+                        var icon = cls === 'success' ? '✓' : cls === 'error' ? '!' : cls === 'warning' ? '!' : 'i';
+                        var div = document.createElement('div');
+                        div.className = 'event-entry ' + cls;
+                        var timeStr = ev.time ? (function() { var d = new Date(ev.time); return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); })() : '—';
+                        div.innerHTML = '<div class="event-icon ' + cls + '">' + icon + '</div><div><div class="event-msg">' + (ev.message || '').replace(/</g, '&lt;') + '</div><div class="event-time">' + timeStr + ' · ' + (ev.event_type || 'general') + '</div></div>';
+                        listEl.appendChild(div);
+                    });
+                })
+                .catch(function() {
+                    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;" id="historyEmpty">Unable to load history</div>';
+                });
+        }
+        function setDefaultHistoryDates() {
+            var to = new Date();
+            var from = new Date(to);
+            from.setDate(from.getDate() - 7);
+            var fromEl = document.getElementById('historyFromDate');
+            var toEl = document.getElementById('historyToDate');
+            if (fromEl) fromEl.value = from.toISOString().slice(0, 10);
+            if (toEl) toEl.value = to.toISOString().slice(0, 10);
+        }
+        updateSystemPage();
+        setInterval(updateSystemPage, 3000);
+        setDefaultHistoryDates();
+        var loadBtn = document.getElementById('loadHistoryBtn');
+        if (loadBtn) loadBtn.addEventListener('click', loadSystemHistory);
+        loadSystemHistory();
+    </script>
+</body>
+</html>

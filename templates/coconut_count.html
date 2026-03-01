@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coconut Analytics & Live Feed - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar Styles - Same as other pages */
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            animation: gradientShift 8s ease infinite;
+            z-index: 0;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(106, 17, 203, 0.15) 0%, transparent 70%);
+            animation: float 15s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            }
+            50% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #1a2540 40%, #3d4a68 60%, #6b7280 80%, #9ca3af 100%);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(106, 17, 203, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation-delay: 0s; animation-duration: 15s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 30%; animation-delay: 2s; animation-duration: 18s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 50%; animation-delay: 4s; animation-duration: 20s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 70%; animation-delay: 1s; animation-duration: 16s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 90%; animation-delay: 3s; animation-duration: 22s; }
+        .particle:nth-child(6) { width: 3px; height: 3px; left: 20%; animation-delay: 5s; animation-duration: 17s; }
+        .particle:nth-child(7) { width: 5px; height: 5px; left: 60%; animation-delay: 2.5s; animation-duration: 19s; }
+        .particle:nth-child(8) { width: 4px; height: 4px; left: 80%; animation-delay: 1.5s; animation-duration: 21s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(50px) scale(1); opacity: 0; }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-section {
+            padding: 12px 12px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-section {
+            padding: 10px 0 20px 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            position: relative;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-left-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(106, 17, 203, 0.35) 0%, rgba(37, 117, 252, 0.25) 100%);
+            color: #fff;
+            border-left-color: #a78bfa;
+            box-shadow: 0 2px 14px rgba(106, 17, 203, 0.4);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: transform 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .user-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .user-logo:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .info-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(106, 17, 203, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            width: calc(100vw - 200px);
+            min-width: 0;
+            margin-left: 200px;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f5f7fa;
+            display: flex;
+            position: relative;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .main-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("{{ url_for('static', filename='images/coconut_tp.png') }}") no-repeat center bottom;
+            background-size: min(420px, 45vw) auto;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .top-header {
+            background: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .header-metrics {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .metric-value.large {
+            font-size: 20px;
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Metrics Cards Row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Throughput stats and chart: only visible when coconut detection model is started */
+        .throughput-when-model-on {
+            display: none;
+        }
+        .throughput-when-model-on.visible {
+            display: block;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .metric-card-title {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .metric-card-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .metric-card-subtitle {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* Belt totals row: Belt 1, Belt 2, Belt 3 coconut count */
+        .belt-totals-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .belt-total-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .belt-total-card.belt-1 { border-left-color: #059669; }
+        .belt-total-card.belt-2 { border-left-color: #2563eb; }
+        .belt-total-card.belt-3 { border-left-color: #7c3aed; }
+
+        .belt-total-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .belt-total-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        /* Main Content Area - Cameras and Analytics Side by Side */
+        .main-content-area {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* 6× Live RTSP Camera View */
+        .cameras-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            min-height: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .camera-section {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .camera-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #00bfff;
+        }
+
+        .camera-count {
+            font-size: 11px;
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .camera-feed-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            min-height: 140px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            flex: 1;
+            contain: layout paint;
+        }
+
+        .camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            image-rendering: auto;
+            image-rendering: -webkit-optimize-contrast;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            background: #ef4444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .live-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            animation: livePulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        .cameras-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cameras-section-title .live-rtsp-tag {
+            font-size: 10px;
+            font-weight: 600;
+            color: #059669;
+            background: rgba(5, 150, 105, 0.15);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        /* Detection control: Start / Stop button */
+        .detection-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .detection-status {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .detection-status.on {
+            color: #059669;
+        }
+
+        .detection-status .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .detection-status.on .status-dot {
+            background: #059669;
+            box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-detection {
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-detection.start {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+        }
+
+        .btn-detection.start:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-detection.stop {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+        }
+
+        .btn-detection.stop:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-detection:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .detection-feedback {
+            font-size: 11px;
+            color: #059669;
+            margin-left: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .detection-feedback.visible {
+            opacity: 1;
+        }
+
+        .detection-hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin-left: 8px;
+            display: none;
+        }
+
+        .detection-hint.visible {
+            display: inline;
+        }
+
+        /* Detection loading state: spinner + message while model starts */
+        .detection-loading-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .detection-loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.12) 0%, rgba(4, 120, 87, 0.08) 100%);
+            border: 1px solid rgba(5, 150, 105, 0.35);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #047857;
+            font-weight: 500;
+        }
+
+        .detection-loading.visible {
+            display: inline-flex;
+        }
+
+        .detection-spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(5, 150, 105, 0.25);
+            border-top-color: #059669;
+            border-radius: 50%;
+            animation: detectionSpin 0.9s linear infinite;
+        }
+
+        @keyframes detectionSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        .detection-loading-msg {
+            max-width: 320px;
+            line-height: 1.4;
+        }
+
+        .detection-loading-msg .hint {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Right Side Analytics Column */
+        .analytics-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .analytics-column::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .analytics-column::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .analytics-column::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+            flex-shrink: 0;
+        }
+
+        .analytics-card.chart-card {
+            flex: 1;
+            min-height: 250px;
+        }
+
+        .analytics-card.activity-card {
+            flex: 1;
+            min-height: 250px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* Event Log */
+        .event-log {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .event-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .event-log::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .event-log::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+
+        .event-item:hover {
+            background: #f9fafb;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .event-dot.blue {
+            background: #3b82f6;
+        }
+
+        .event-dot.green {
+            background: #10b981;
+        }
+
+        .event-dot.yellow {
+            background: #f59e0b;
+        }
+
+        .event-dot.red {
+            background: #ef4444;
+        }
+
+        .event-content {
+            flex: 1;
+        }
+
+        .event-text {
+            font-size: 12px;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .event-time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .metrics-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .main-content-area {
+                grid-template-columns: 1.5fr 1fr;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-content-area {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+            }
+            .cameras-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                min-height: 500px;
+            }
+            .analytics-column {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            .analytics-card.chart-card {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .cameras-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, 1fr);
+                min-height: 600px;
+            }
+            .metrics-row {
+                grid-template-columns: 1fr;
+            }
+            .belt-totals-row {
+                grid-template-columns: 1fr;
+            }
+            .analytics-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="SilverMill Logo"
+                 class="logo-img">
+        </div>
+
+        <div class="nav-section">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">◉</div>
+                <span>Dashboard</span>
+            </a>
+            <a href="/live_camera" class="nav-item">
+                <div class="nav-icon">▶</div>
+                <span>Live Cameras</span>
+            </a>
+            <a href="/coconut_count" class="nav-item">
+                <div class="nav-icon">◎</div>
+                <span>Coconut Count</span>
+            </a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item">
+                <div class="nav-icon">▣</div>
+                <span>Truck Verification</span>
+            </a>
+            <a href="/weight_check" class="nav-item">
+                <div class="nav-icon">☰</div>
+                <span>Coconut Summary</span>
+            </a>
+            <a href="/truck_summary" class="nav-item">
+                <div class="nav-icon">▤</div>
+                <span>Truck Summary</span>
+            </a>
+            <a href="/system" class="nav-item">
+                <div class="nav-icon">⚙</div>
+                <span>System</span>
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item">
+                <div class="nav-icon">⎋</div>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="/login" class="nav-item">
+                <div class="nav-icon">🔐</div>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}"
+                 alt="User Logo"
+                 class="user-logo">
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">v2.1.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="info-value">Online</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Build</span>
+                <span class="info-value">2024.12</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">© 2024</span>
+                <span class="info-value">SilverMill</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <h1 class="page-title">Coconut Analytics & Live Feed</h1>
+            <div class="header-metrics">
+                <div class="detection-control">
+                    <span class="detection-status" id="detectionStatus">
+                        <span class="status-dot"></span>
+                        <span id="detectionStatusText">Detection: Off</span>
+                    </span>
+                    <button type="button" class="btn-detection start" id="btnDetection" aria-label="Start coconut detection">
+                        Start detection
+                    </button>
+                    <span class="detection-feedback" id="detectionFeedback" aria-live="polite"></span>
+                    <span class="detection-hint" id="detectionHint">Click <strong>Stop detection</strong> anytime to return to normal view.</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Batch ID</span>
+                    <span class="metric-value" id="batchId">-</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Status</span>
+                    <span class="metric-value" id="batchStatus" style="color: #6b7280;">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Metrics Cards -->
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="metric-card-title">Total Coconuts Today</div>
+                    <div class="metric-card-value" id="totalCoconuts">0</div>
+                    <div class="metric-card-subtitle" id="coconutChange">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-title">Detection runtime</div>
+                    <div class="metric-card-value" id="detectionRuntime">—</div>
+                    <div class="metric-card-subtitle">This session</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-title">Accuracy</div>
+                    <div class="metric-card-value" id="accuracy">90%</div>
+                    <div class="metric-card-subtitle">Detection accuracy</div>
+                </div>
+            </div>
+
+            <!-- Belt totals: coconuts per belt (Belt 1 = Cam 1+2, Belt 2 = Cam 3+4, Belt 3 = Cam 5+6) -->
+            <div class="belt-totals-row">
+                <div class="belt-total-card belt-1">
+                    <span class="belt-total-label">Belt 1 total</span>
+                    <span class="belt-total-value" id="belt1Total">0</span>
+                </div>
+                <div class="belt-total-card belt-2">
+                    <span class="belt-total-label">Belt 2 total</span>
+                    <span class="belt-total-value" id="belt2Total">0</span>
+                </div>
+                <div class="belt-total-card belt-3">
+                    <span class="belt-total-label">Belt 3 total</span>
+                    <span class="belt-total-value" id="belt3Total">0</span>
+                </div>
+            </div>
+
+            <!-- Main Content Area - Cameras and Analytics Side by Side -->
+            <div class="main-content-area">
+                <!-- 6× Live RTSP Camera View -->
+                <div class="cameras-wrapper">
+                    <div class="cameras-section-title">
+                        6× Camera Live View
+                        <span class="live-rtsp-tag">Live RTSP</span>
+                    </div>
+                <div class="cameras-grid">
+                <!-- Belt 1: Cameras 1-2 -->
+                <div class="camera-section">
+                    <div class="camera-header">
+                        <div class="camera-title">
+                            <span class="live-badge">Live</span> Belt 1 (Cam 1)
+                        </div>
+                        <div class="camera-count">Count: <span id="cam1Count">0</span></div>
+                    </div>
+                    <div class="camera-feed-container">
+                        <img src="/coconut_video_feed/0" alt="Belt 1 Camera 1 Live RTSP" class="camera-feed" decoding="async"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                    </div>
+                </div>
+
+                <div class="camera-section">
+                    <div class="camera-header">
+                        <div class="camera-title">
+                            <span class="live-badge">Live</span> Belt 1 (Cam 2)
+                        </div>
+                        <div class="camera-count">Count: <span id="cam2Count">0</span></div>
+                    </div>
+                    <div class="camera-feed-container">
+                        <img src="/coconut_video_feed/1" alt="Belt 1 Camera 2 Live RTSP" class="camera-feed" decoding="async"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                    </div>
+                </div>
+
+                <!-- Belt 2: Cameras 3-4 -->
+                <div class="camera-section">
+                    <div class="camera-header">
+                        <div class="camera-title">
+                            <span class="live-badge">Live</span> Belt 2 (Cam 3)
+                        </div>
+                        <div class="camera-count">Count: <span id="cam3Count">0</span></div>
+                    </div>
+                    <div class="camera-feed-container">
+                        <img src="/coconut_video_feed/2" alt="Belt 2 Camera 3 Live RTSP" class="camera-feed" decoding="async"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                    </div>
+                </div>
+
+                <div class="camera-section">
+                    <div class="camera-header">
+                        <div class="camera-title">
+                            <span class="live-badge">Live</span> Belt 2 (Cam 4)
+                        </div>
+                        <div class="camera-count">Count: <span id="cam4Count">0</span></div>
+                    </div>
+                    <div class="camera-feed-container">
+                        <img src="/coconut_video_feed/3" alt="Belt 2 Camera 4 Live RTSP" class="camera-feed" decoding="async"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                    </div>
+                </div>
+
+                <!-- Belt 3: Cameras 5-6 -->
+                <div class="camera-section">
+                    <div class="camera-header">
+                        <div class="camera-title">
+                            <span class="live-badge">Live</span> Belt 3 (Cam 5)
+                        </div>
+                        <div class="camera-count">Count: <span id="cam5Count">0</span></div>
+                    </div>
+                    <div class="camera-feed-container">
+                        <img src="/coconut_video_feed/4" alt="Belt 3 Camera 5 Live RTSP" class="camera-feed" decoding="async"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                    </div>
+                </div>
+
+                <div class="camera-section">
+                    <div class="camera-header">
+                        <div class="camera-title">
+                            <span class="live-badge">Live</span> Belt 3 (Cam 6)
+                        </div>
+                        <div class="camera-count">Count: <span id="cam6Count">0</span></div>
+                    </div>
+                    <div class="camera-feed-container">
+                        <img src="/coconut_video_feed/5" alt="Belt 3 Camera 6 Live RTSP" class="camera-feed" decoding="async"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                    </div>
+                </div>
+                </div>
+                </div>
+
+                <!-- Right Side Analytics Column -->
+                <div class="analytics-column">
+                    <!-- Daily Throughput Trend (shown only when model is started) -->
+                    <div class="analytics-card chart-card throughput-when-model-on" id="throughputChartWrap">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Daily Coconut Throughput Trend</div>
+                                <div class="card-subtitle">Last 24 hours</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="throughputChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Log -->
+                    <div class="analytics-card activity-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Recent Activity Log</div>
+                            <div class="card-subtitle">Live system events</div>
+                        </div>
+                    </div>
+                    <div class="event-log" id="eventLog">
+                        <div class="event-item">
+                            <div class="event-dot blue"></div>
+                            <div class="event-content">
+                                <div class="event-text">Click <strong>Start detection</strong> to load the model and see live counts here. You can refresh the page and start again if loading takes too long.</div>
+                                <div class="event-time">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store interval IDs for cleanup
+        let updateCountsInterval = null;
+        let updateEventTimesInterval = null;
+        let throughputChart = null;
+
+        // Initialize chart only when page is visible and ready
+        function initializeChart() {
+            if (throughputChart) return; // Already initialized
+            
+            const throughputCtx = document.getElementById('throughputChart');
+            if (!throughputCtx) return; // Canvas not ready yet
+            
+            throughputChart = new Chart(throughputCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => {
+                    const hour = (i + 1) % 24;
+                    return hour.toString().padStart(2, '0') + ':00';
+                }),
+                datasets: [{
+                    label: 'Coconuts',
+                    data: Array(24).fill(0),
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 50
+                        }
+                    }
+                }
+            }
+            });
+        }
+
+        // Real-time counting from server (coconut.pt detection)
+        let lastTotal = 0;
+        let lastActivityCount = 0;
+        let countHistory = [];
+        const COUNT_HISTORY_MAX = 60; // for rate over last ~60 polls
+
+        // Today's totals and accuracy from database (coconut_count_history)
+        function updateTodaySummaryFromDb() {
+            fetch('/api/coconut_today_summary')
+                .then(res => res.json())
+                .then(function(data) {
+                    var totalEl = document.getElementById('totalCoconuts');
+                    var b1El = document.getElementById('belt1Total');
+                    var b2El = document.getElementById('belt2Total');
+                    var b3El = document.getElementById('belt3Total');
+                    var accEl = document.getElementById('accuracy');
+                    if (totalEl) totalEl.textContent = Number(data.total_today || 0).toLocaleString();
+                    if (b1El) b1El.textContent = Number(data.belt1_today || 0).toLocaleString();
+                    if (b2El) b2El.textContent = Number(data.belt2_today || 0).toLocaleString();
+                    if (b3El) b3El.textContent = Number(data.belt3_today || 0).toLocaleString();
+                    if (accEl) accEl.textContent = data.accuracy != null && data.accuracy !== '' ? data.accuracy : '—';
+                })
+                .catch(function() {
+                    var totalEl = document.getElementById('totalCoconuts');
+                    var b1El = document.getElementById('belt1Total');
+                    var b2El = document.getElementById('belt2Total');
+                    var b3El = document.getElementById('belt3Total');
+                    var accEl = document.getElementById('accuracy');
+                    if (totalEl) totalEl.textContent = '0';
+                    if (b1El) b1El.textContent = '0';
+                    if (b2El) b2El.textContent = '0';
+                    if (b3El) b3El.textContent = '0';
+                    if (accEl) accEl.textContent = '—';
+                });
+        }
+
+        function updateCounts() {
+            fetch('/api/coconut_counts')
+                .then(res => res.json())
+                .then(data => {
+                    const c0 = parseInt(data['0'] || 0, 10);
+                    const c1 = parseInt(data['1'] || 0, 10);
+                    const c2 = parseInt(data['2'] || 0, 10);
+                    const c3 = parseInt(data['3'] || 0, 10);
+                    const c4 = parseInt(data['4'] || 0, 10);
+                    const c5 = parseInt(data['5'] || 0, 10);
+                    document.getElementById('cam1Count').textContent = c0;
+                    document.getElementById('cam2Count').textContent = c1;
+                    document.getElementById('cam3Count').textContent = c2;
+                    document.getElementById('cam4Count').textContent = c3;
+                    document.getElementById('cam5Count').textContent = c4;
+                    document.getElementById('cam6Count').textContent = c5;
+                    const currentTotal = c0 + c1 + c2 + c3 + c4 + c5;
+                    countHistory.push({ t: Date.now(), total: currentTotal });
+                    if (countHistory.length > COUNT_HISTORY_MAX) countHistory.shift();
+                    lastTotal = currentTotal;
+                    const detectionOn = document.getElementById('detectionStatus') && document.getElementById('detectionStatus').classList.contains('on');
+                    if (detectionOn && currentTotal > lastActivityCount && currentTotal > 0 && (currentTotal - lastActivityCount) >= 5) {
+                        lastActivityCount = currentTotal;
+                        addEvent('Count update: ' + currentTotal.toLocaleString() + ' coconuts (detection live)', 'green');
+                    }
+                })
+                .catch(() => {});
+        }
+
+        let todaySummaryInterval = null;
+
+        function startUpdateCounts() {
+            if (updateCountsInterval) clearInterval(updateCountsInterval);
+            if (todaySummaryInterval) clearInterval(todaySummaryInterval);
+            if (!document.hidden) {
+                updateCounts();
+                updateTodaySummaryFromDb();
+                updateCountsInterval = setInterval(updateCounts, 1500);
+                todaySummaryInterval = setInterval(updateTodaySummaryFromDb, 2000);
+            }
+        }
+
+        startUpdateCounts();
+
+        // Simulate real-time event updates
+        function addEvent(text, type = 'blue') {
+            const eventLog = document.getElementById('eventLog');
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            
+            const dotColors = {
+                'blue': 'blue',
+                'green': 'green',
+                'yellow': 'yellow',
+                'red': 'red'
+            };
+            
+            eventItem.innerHTML = `
+                <div class="event-dot ${dotColors[type]}"></div>
+                <div class="event-content">
+                    <div class="event-text">${text}</div>
+                    <div class="event-time">Just now</div>
+                </div>
+            `;
+            
+            eventLog.insertBefore(eventItem, eventLog.firstChild);
+            
+            // Keep only last 10 events
+            while (eventLog.children.length > 10) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        // Update event times with visibility check
+        function startUpdateEventTimes() {
+            if (updateEventTimesInterval) clearInterval(updateEventTimesInterval);
+            if (!document.hidden) {
+                updateEventTimesInterval = setInterval(() => {
+                    const events = document.querySelectorAll('.event-time');
+                    events.forEach((event, index) => {
+                        const minutes = index * 2 + 2;
+                        if (minutes < 60) {
+                            event.textContent = `${minutes} minutes ago`;
+                        } else {
+                            const hours = Math.floor(minutes / 60);
+                            event.textContent = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                        }
+                    });
+                }, 60000);
+            }
+        }
+        
+        // Initial start
+        startUpdateEventTimes();
+
+        // Set active navigation based on current page
+        function setActiveNavigation() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                if (href === currentPath || (currentPath === '/' && href === '/')) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // ---------- Coconut detection: Start / Stop button ----------
+        function updateDetectionUI(enabled, startedAtIso) {
+            const statusEl = document.getElementById('detectionStatus');
+            const textEl = document.getElementById('detectionStatusText');
+            const btn = document.getElementById('btnDetection');
+            const hintEl = document.getElementById('detectionHint');
+            if (!statusEl || !textEl || !btn) return;
+            if (enabled) {
+                statusEl.classList.add('on');
+                textEl.textContent = 'Detection: On';
+                btn.textContent = 'Stop detection';
+                btn.className = 'btn-detection stop';
+                btn.setAttribute('aria-label', 'Stop coconut detection');
+                if (hintEl) hintEl.classList.add('visible');
+                lastActivityCount = lastTotal;
+                // Show Daily Throughput Trend when model is started
+                const chartWrap = document.getElementById('throughputChartWrap');
+                if (chartWrap) chartWrap.classList.add('visible');
+            } else {
+                statusEl.classList.remove('on');
+                textEl.textContent = 'Detection: Off';
+                btn.textContent = 'Start detection';
+                btn.className = 'btn-detection start';
+                btn.setAttribute('aria-label', 'Start coconut detection');
+                if (hintEl) hintEl.classList.remove('visible');
+                const chartWrap = document.getElementById('throughputChartWrap');
+                if (chartWrap) chartWrap.classList.remove('visible');
+            }
+            if (enabled && startedAtIso) detectionStartedAtIso = startedAtIso;
+            else if (!enabled) detectionStartedAtIso = null;
+            updateRuntimeDisplay();
+        }
+
+        let detectionStartedAtIso = null;
+
+        function updateRuntimeDisplay() {
+            const el = document.getElementById('detectionRuntime');
+            if (!el) return;
+            if (!detectionStartedAtIso) {
+                el.textContent = '—';
+                return;
+            }
+            const start = new Date(detectionStartedAtIso);
+            const sec = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            if (h > 0) el.textContent = h + 'h ' + m + 'm ' + s + 's';
+            else if (m > 0) el.textContent = m + 'm ' + s + 's';
+            else el.textContent = s + 's';
+        }
+
+        function fetchDetectionStatus() {
+            fetch('/api/coconut_detection/status')
+                .then(res => res.json())
+                .then(data => {
+                    updateDetectionUI(!!data.enabled, data.started_at || null);
+                })
+                .catch(() => updateDetectionUI(false, null));
+        }
+
+        function showDetectionFeedback(msg) {
+            const el = document.getElementById('detectionFeedback');
+            if (!el) return;
+            el.textContent = msg;
+            el.classList.add('visible');
+            setTimeout(function() {
+                el.textContent = '';
+                el.classList.remove('visible');
+            }, 2200);
+        }
+
+        function setDetection(enabled) {
+            const btn = document.getElementById('btnDetection');
+            if (enabled && btn) {
+                btn.disabled = true;
+                btn.textContent = 'Starting…';
+            }
+            showDetectionFeedback(enabled ? 'Starting detection…' : 'Stopping detection…');
+            fetch('/api/coconut_detection/set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: enabled })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    updateDetectionUI(!!data.enabled, data.started_at || null);
+                    if (enabled) {
+                        addEvent('Coconut detection started. Model is running on 6 cameras.', 'green');
+                        setTimeout(fetchDetectionStatus, 400);
+                    } else {
+                        addEvent('Coconut detection stopped.', 'yellow');
+                    }
+                })
+                .catch(function() {
+                    if (!timedOut && detectionRequestTimeout) clearTimeout(detectionRequestTimeout);
+                    detectionRequestTimeout = null;
+                    fetchDetectionStatus();
+                })
+                .finally(function() {
+                    if (btn) btn.disabled = false;
+                });
+        }
+
+        document.getElementById('btnDetection').addEventListener('click', function() {
+            const statusEl = document.getElementById('detectionStatus');
+            const isOn = statusEl && statusEl.classList.contains('on');
+            // Start or Stop: send API then reload page immediately
+            fetch('/api/coconut_detection/set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: !isOn })
+            }).catch(function() {});
+            location.reload();
+        });
+
+        // Initialize navigation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveNavigation();
+            fetchDetectionStatus();
+            setInterval(updateRuntimeDisplay, 1000);
+            // Start loading the model immediately so "Start detection" responds quickly
+            fetch('/api/coconut_detection/warmup').catch(function() {});
+            // Initialize chart after DOM is ready
+            setTimeout(initializeChart, 100);
+
+            // Camera feed error handling (all 6 feeds load immediately for live RTSP)
+            const cameraImages = document.querySelectorAll('.camera-feed');
+            cameraImages.forEach((img, index) => {
+                // Add error handling to prevent continuous retries
+                let errorCount = 0;
+                const maxRetries = 2;
+                const originalSrc = img.src;
+                
+                img.onerror = function() {
+                    errorCount++;
+                    if (errorCount <= maxRetries && !document.hidden) {
+                        setTimeout(() => {
+                            if (!document.hidden && errorCount <= maxRetries) {
+                                img.src = '';
+                                img.src = originalSrc;
+                            }
+                        }, 3000);
+                    } else {
+                        img.onerror = null; // Stop retrying
+                    }
+                };
+            });
+        });
+
+        // Pause/resume updates based on page visibility
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (updateCountsInterval) clearInterval(updateCountsInterval);
+                if (todaySummaryInterval) clearInterval(todaySummaryInterval);
+                if (updateEventTimesInterval) clearInterval(updateEventTimesInterval);
+            } else {
+                startUpdateCounts();
+                startUpdateEventTimes();
+            }
+        });
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            // Clear all intervals
+            if (updateCountsInterval) clearInterval(updateCountsInterval);
+            if (updateEventTimesInterval) clearInterval(updateEventTimesInterval);
+            
+            // Destroy chart if exists
+            if (throughputChart) {
+                throughputChart.destroy();
+                throughputChart = null;
+            }
+            
+            // Stop camera feeds
+            const cameraImages = document.querySelectorAll('.camera-feed');
+            cameraImages.forEach((img) => {
+                img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3EUnloading...%3C/text%3E%3C/svg%3E';
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Truck Verification & Security Compliance - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar Styles - Same as other pages */
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            animation: gradientShift 8s ease infinite;
+            z-index: 0;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(106, 17, 203, 0.15) 0%, transparent 70%);
+            animation: float 15s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            }
+            50% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #1a2540 40%, #3d4a68 60%, #6b7280 80%, #9ca3af 100%);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(106, 17, 203, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation-delay: 0s; animation-duration: 15s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 30%; animation-delay: 2s; animation-duration: 18s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 50%; animation-delay: 4s; animation-duration: 20s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 70%; animation-delay: 1s; animation-duration: 16s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 90%; animation-delay: 3s; animation-duration: 22s; }
+        .particle:nth-child(6) { width: 3px; height: 3px; left: 20%; animation-delay: 5s; animation-duration: 17s; }
+        .particle:nth-child(7) { width: 5px; height: 5px; left: 60%; animation-delay: 2.5s; animation-duration: 19s; }
+        .particle:nth-child(8) { width: 4px; height: 4px; left: 80%; animation-delay: 1.5s; animation-duration: 21s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(50px) scale(1); opacity: 0; }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-section {
+            padding: 12px 12px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-section {
+            padding: 10px 0 20px 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            position: relative;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-left-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(106, 17, 203, 0.35) 0%, rgba(37, 117, 252, 0.25) 100%);
+            color: #fff;
+            border-left-color: #a78bfa;
+            box-shadow: 0 2px 14px rgba(106, 17, 203, 0.4);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: transform 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .user-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .user-logo:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .info-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(106, 17, 203, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            width: calc(100vw - 200px);
+            min-width: 0;
+            margin-left: 200px;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .main-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("{{ url_for('static', filename='images/coconut_tp.png') }}") no-repeat center bottom;
+            background-size: min(420px, 45vw) auto;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .top-header {
+            background: #ffffff;
+            padding: 12px 32px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        /* Metrics Cards Row */
+        .metrics-row {
+            background: #ffffff;
+            padding: 16px 32px;
+            border-bottom: 1px solid #e5e7eb;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .metric-card-title {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .metric-card-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Scale Title */
+        .scale-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        /* Detection control: Start/Stop - in top header corner (right-aligned) */
+        .detection-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .top-header .detection-control {
+            margin: 0;
+        }
+        .detection-status {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .detection-status.running {
+            color: #059669;
+        }
+        .detection-control .btn-detection {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .detection-control .btn-detection:hover {
+            transform: translateY(-1px);
+        }
+        .detection-control .btn-start {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #fff;
+        }
+        .detection-control .btn-start:hover:not(:disabled) {
+            background: linear-gradient(135deg, #047857 0%, #059669 100%);
+        }
+        .detection-control .btn-stop {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: #fff;
+        }
+        .detection-control .btn-stop:hover:not(:disabled) {
+            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+        }
+        .detection-control .btn-detection:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Main Recognition Section */
+        .recognition-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Cameras Grid Container */
+        .cameras-grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            min-height: 0;
+        }
+
+        /* Recognition Panel */
+        .recognition-panel {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #00bfff;
+        }
+
+        .camera-badge {
+            font-size: 9px;
+            font-weight: 700;
+            color: #0f172a;
+            background: #22c55e;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-feed {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel-feed img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .recognition-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            padding: 16px;
+            color: white;
+        }
+
+        .plate-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+
+        .confidence-text {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .driver-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+
+        .driver-id {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Action Buttons Sidebar */
+        .action-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
+        }
+
+        .action-button:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-button.print {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .action-button.open {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .action-button.reject {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .action-button-icon {
+            font-size: 16px;
+        }
+
+        /* Session Details */
+        .session-details {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .session-details::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .session-details::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .session-details::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .session-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-table tr {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .details-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .details-table td {
+            padding: 12px 0;
+            font-size: 12px;
+        }
+
+        .details-label {
+            color: #6b7280;
+            font-weight: 600;
+            width: 40%;
+        }
+
+        .details-value {
+            color: #1a1a2e;
+            font-weight: 500;
+        }
+
+        .details-value.weight {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .recent-plates-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .recent-plates-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .recent-plates-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .recent-plates-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .recent-plates-list::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .recent-plates-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .recent-plate-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 11px;
+        }
+
+        .recent-plate-number {
+            font-weight: 700;
+            color: #1e40af;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .recent-plate-meta {
+            color: #6b7280;
+            font-size: 10px;
+        }
+
+        .recent-plates-empty {
+            color: #9ca3af;
+            font-size: 11px;
+            padding: 12px 0;
+            text-align: center;
+        }
+
+        /* Right-side 4-grid 2×2: driver face, front plate, back plate, weight machine */
+        .snap-grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .snap-grid-cell {
+            background: white;
+            border-radius: 8px;
+            padding: 6px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .snap-grid-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+
+        .snap-grid-img-wrap {
+            width: 100%;
+            height: 0;
+            padding-bottom: 70%;
+            background: #111;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .snap-grid-img-wrap img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .driver-snap-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+
+        .driver-snap-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+
+        .driver-snap-img-wrap {
+            width: 100%;
+            aspect-ratio: 1;
+            max-height: 180px;
+            background: #111;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .driver-snap-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .driver-snap-hint {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .driver-snap-captured-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .driver-snap-captured-badge.visible {
+            opacity: 1;
+        }
+
+        .driver-snap-time {
+            font-size: 10px;
+            color: #059669;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .plate-snap-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+
+        .plate-snap-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+
+        .plate-snap-img-wrap {
+            width: 100%;
+            max-height: 100px;
+            background: #111;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plate-snap-img-wrap img {
+            width: 100%;
+            height: auto;
+            max-height: 100px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .plate-snap-captured-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .plate-snap-captured-badge.visible {
+            opacity: 1;
+        }
+
+        .plate-snap-number {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            min-height: 24px;
+            display: block;
+        }
+
+        .plate-snap-meta {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .plate-snap-hint {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .metrics-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .recognition-section {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+            }
+            .cameras-grid-container {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .metrics-row {
+                grid-template-columns: 1fr;
+            }
+            .recognition-section {
+                grid-template-columns: 1fr;
+            }
+            .cameras-grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, auto);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="SilverMill Logo"
+                 class="logo-img">
+        </div>
+
+        <div class="nav-section">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">◉</div>
+                <span>Dashboard</span>
+            </a>
+            <a href="/live_camera" class="nav-item">
+                <div class="nav-icon">▶</div>
+                <span>Live Cameras</span>
+            </a>
+            <a href="/coconut_count" class="nav-item">
+                <div class="nav-icon">◎</div>
+                <span>Coconut Count</span>
+            </a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item">
+                <div class="nav-icon">▣</div>
+                <span>Truck Verification</span>
+            </a>
+            <a href="/weight_check" class="nav-item">
+                <div class="nav-icon">☰</div>
+                <span>Coconut Summary</span>
+            </a>
+            <a href="/truck_summary" class="nav-item">
+                <div class="nav-icon">▤</div>
+                <span>Truck Summary</span>
+            </a>
+            <a href="/system" class="nav-item">
+                <div class="nav-icon">⚙</div>
+                <span>System</span>
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item">
+                <div class="nav-icon">⎋</div>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="/login" class="nav-item">
+                <div class="nav-icon">🔐</div>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}"
+                 alt="User Logo"
+                 class="user-logo">
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">v2.1.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="info-value">Online</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Build</span>
+                <span class="info-value">2024.12</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">© 2024</span>
+                <span class="info-value">SilverMill</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <h1 class="page-title">Truck Verification & Security Compliance</h1>
+            <div class="detection-control">
+                <span class="detection-status" id="detectionStatus">Detection: Off</span>
+                <button type="button" class="btn-detection btn-start" id="btnStartDetection">Start detection</button>
+                <button type="button" class="btn-detection btn-stop" id="btnStopDetection" disabled>Stop detection</button>
+            </div>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-card-title">Last Plate Scan</div>
+                <div class="metric-card-value" id="lastPlate">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-title">Scans/Minute</div>
+                <div class="metric-card-value" id="scansPerMin">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-title">Accuracy</div>
+                <div class="metric-card-value" id="accuracy">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-title">Batch ID</div>
+                <div class="metric-card-value" id="batchId">—</div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="scale-title">Scale 01 - Main Entrance</div>
+
+            <!-- Recognition Section -->
+            <div class="recognition-section">
+                <!-- Cameras Grid - 4 RTSP cameras: License Front, License Back, Driver Snap, Weight Machine -->
+                <div class="cameras-grid-container">
+                    <!-- 1. License Plate (Front) - front number plate camera -->
+                    <div class="recognition-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">License Plate (Front)</div>
+                            <span class="camera-badge">RTSP</span>
+                        </div>
+                        <div class="panel-feed">
+                            <img src="/truck_video_feed/6" alt="License Plate Front - RTSP" class="camera-feed" data-feed-src="/truck_video_feed/6"
+                                 onerror="truckFeedRetry(this);">
+                            <div class="recognition-overlay">
+                                <div class="plate-number" id="detectedPlate">—</div>
+                                <div class="confidence-text">Front number plate camera (ALPR + EasyOCR)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. License Plate (Back) - back number plate camera -->
+                    <div class="recognition-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">License Plate (Back)</div>
+                            <span class="camera-badge">RTSP</span>
+                        </div>
+                        <div class="panel-feed">
+                            <img src="/truck_video_feed/7" alt="License Plate Back - RTSP" class="camera-feed" data-feed-src="/truck_video_feed/7"
+                                 onerror="truckFeedRetry(this);">
+                            <div class="recognition-overlay">
+                                <div class="plate-number" id="detectedPlateBack">—</div>
+                                <div class="confidence-text">Back number plate camera (ALPR + EasyOCR)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Driver Snap - driver face capture camera (person detection) -->
+                    <div class="recognition-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Driver Snap</div>
+                            <span class="camera-badge">RTSP</span>
+                        </div>
+                        <div class="panel-feed">
+                            <img src="/truck_video_feed/8" alt="Driver Snap - RTSP" class="camera-feed" data-feed-src="/truck_video_feed/8"
+                                 onerror="truckFeedRetry(this);">
+                            <div class="recognition-overlay">
+                                <div class="driver-name" id="driverName">—</div>
+                                <div class="driver-id" id="driverId">Driver capture (person detection)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Weight Machine - weighbridge / scale camera -->
+                    <div class="recognition-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Weight Machine</div>
+                            <span class="camera-badge">RTSP</span>
+                        </div>
+                        <div class="panel-feed">
+                            <img src="/truck_video_feed/9" alt="Weight Machine - RTSP" class="camera-feed" data-feed-src="/truck_video_feed/9"
+                                 onerror="truckFeedRetry(this);">
+                            <div class="recognition-overlay">
+                                <div class="confidence-text">Weighbridge / scale camera</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar - 4-grid images (2x2) then recent plates + Session Details -->
+                <div class="action-sidebar">
+                    <!-- 4-grid: Driver face | Front plate, Back plate | Weight machine (2 rows, 2 columns) -->
+                    <div class="snap-grid-4">
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Driver face</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="driverSnapImg" src="/api/truck/driver_snap" alt="Driver face" />
+                            </div>
+                        </div>
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Front number plate</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="plateSnapFrontImg" src="/api/truck/plate_snap/6" alt="Front plate" />
+                            </div>
+                        </div>
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Back number plate</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="plateSnapBackImg" src="/api/truck/plate_snap/7" alt="Back plate" />
+                            </div>
+                        </div>
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Weight machine</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="weightSnapImg" src="/api/truck/weight_snap" alt="Weight machine" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Recent number plates (from ALPR cams 6 & 7) -->
+                    <div class="recent-plates-card">
+                        <div class="recent-plates-title">Recent number plates</div>
+                        <div class="recent-plates-list" id="recentPlatesList">
+                            <div class="recent-plates-empty" id="recentPlatesEmpty">No plates detected yet.</div>
+                        </div>
+                    </div>
+                    <!-- Session Details -->
+                    <div class="session-details">
+                        <div class="session-title">Session Details</div>
+                        <table class="details-table">
+                            <tr>
+                                <td class="details-label">Transaction ID:</td>
+                                <td class="details-value" id="transactionId">—</td>
+                            </tr>
+                            <tr>
+                                <td class="details-label">Timestamp:</td>
+                                <td class="details-value" id="timestamp">—</td>
+                            </tr>
+                            <tr>
+                                <td class="details-label">Truck Weight:</td>
+                                <td class="details-value weight" id="truckWeight">—</td>
+                            </tr>
+                            <tr>
+                                <td class="details-label">Coconut Weight:</td>
+                                <td class="details-value weight" id="coconutWeight">—</td>
+                            </tr>
+                            <tr>
+                                <td class="details-label">Raw Coconut:</td>
+                                <td class="details-value" id="rawCoconut">—</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detection control: model runs only when user clicks "Start detection"
+        function fetchDetectionStatus() {
+            fetch('/api/truck/detection/status')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    updateDetectionUI(data.enabled === true);
+                })
+                .catch(function() { updateDetectionUI(false); });
+        }
+        function updateDetectionUI(enabled) {
+            var statusEl = document.getElementById('detectionStatus');
+            var btnStart = document.getElementById('btnStartDetection');
+            var btnStop = document.getElementById('btnStopDetection');
+            if (statusEl) statusEl.textContent = enabled ? 'Detection: On' : 'Detection: Off';
+            if (statusEl) statusEl.classList.toggle('running', enabled);
+            if (btnStart) btnStart.disabled = enabled;
+            if (btnStop) btnStop.disabled = !enabled;
+        }
+        function startDetection() {
+            fetch('/api/truck/detection/start', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                .then(function(r) { return r.json(); })
+                .then(function(data) { updateDetectionUI(data.enabled); })
+                .catch(function() {});
+        }
+        function stopDetection() {
+            fetch('/api/truck/detection/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                .then(function(r) { return r.json(); })
+                .then(function(data) { updateDetectionUI(data.enabled); })
+                .catch(function() {});
+        }
+        (function initDetectionControl() {
+            fetchDetectionStatus();
+            var btnStart = document.getElementById('btnStartDetection');
+            var btnStop = document.getElementById('btnStopDetection');
+            if (btnStart) btnStart.addEventListener('click', startDetection);
+            if (btnStop) btnStop.addEventListener('click', stopDetection);
+        })();
+
+        // Truck camera feeds: retry on error so streams recover (one thread per URL feeds all 4 panels)
+        var NO_SIGNAL_SVG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';
+        function truckFeedRetry(img) {
+            var src = img.getAttribute('data-feed-src');
+            if (!src) return;
+            var retries = parseInt(img.getAttribute('data-feed-retries') || '0', 10);
+            img.src = NO_SIGNAL_SVG;
+            if (retries >= 5) return;
+            img.setAttribute('data-feed-retries', String(retries + 1));
+            setTimeout(function() {
+                if (img.getAttribute('data-feed-src')) {
+                    img.src = src + (src.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now();
+                }
+            }, 3000);
+        }
+
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const options = { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            const formatted = now.toLocaleString('en-US', options);
+            // Format: "Feb 17, 2026, 12:09 PM"
+            document.getElementById('timestamp').textContent = formatted;
+        }
+
+        // Store interval IDs for cleanup
+        let updateTimestampInterval = null;
+        let recentPlatesInterval = null;
+        let driverSnapInterval = null;
+        let plateSnapInterval = null;
+
+        // Start update timestamp with visibility check
+        function startUpdateTimestamp() {
+            if (updateTimestampInterval) clearInterval(updateTimestampInterval);
+            if (!document.hidden) {
+                updateTimestampInterval = setInterval(updateTimestamp, 60000);
+            }
+        }
+
+        // Update timestamp every minute
+        updateTimestamp();
+        startUpdateTimestamp();
+
+        // Action handlers
+        function handlePrintTicket() {
+            alert('Printing ticket...');
+        }
+
+        function handleOpenBarrier() {
+            alert('Opening barrier...');
+        }
+
+        function handleRejectLoad() {
+            if (confirm('Are you sure you want to reject this load?')) {
+                alert('Load rejected.');
+            }
+        }
+
+        // Poll recent plates from API and update sidebar + metrics
+        function fetchRecentPlates() {
+            if (document.hidden) return;
+            fetch('/api/truck/recent_plates')
+                .then(r => r.json())
+                .then(plates => {
+                    const listEl = document.getElementById('recentPlatesList');
+                    const emptyEl = document.getElementById('recentPlatesEmpty');
+                    if (!listEl) return;
+                    if (!Array.isArray(plates) || plates.length === 0) {
+                        if (emptyEl) emptyEl.style.display = 'block';
+                        listEl.querySelectorAll('.recent-plate-item').forEach(n => n.remove());
+                        return;
+                    }
+                    if (emptyEl) emptyEl.style.display = 'none';
+                    // Show last N (newest at bottom in API; display newest first)
+                    const toShow = plates.slice(-20).reverse();
+                    const lastFront = plates.filter(p => p.camera_id === 6).pop();
+                    const lastBack = plates.filter(p => p.camera_id === 7).pop();
+                    if (lastFront) {
+                        const el = document.getElementById('detectedPlate');
+                        if (el) el.textContent = lastFront.plate || '—';
+                    }
+                    if (lastBack) {
+                        const el = document.getElementById('detectedPlateBack');
+                        if (el) el.textContent = lastBack.plate || '—';
+                    }
+                    const lastAny = plates[plates.length - 1];
+                    if (lastAny) {
+                        const lastEl = document.getElementById('lastPlate');
+                        if (lastEl) lastEl.textContent = lastAny.plate || '—';
+                    }
+                    // Rebuild list: keep empty message hidden, replace items
+                    listEl.querySelectorAll('.recent-plate-item').forEach(n => n.remove());
+                    toShow.forEach(p => {
+                        const div = document.createElement('div');
+                        div.className = 'recent-plate-item';
+                        const timeStr = p.timestamp ? new Date(p.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }) : '';
+                        div.innerHTML = '<div class="recent-plate-number">' + (p.plate || '—') + '</div><div class="recent-plate-meta">' + (p.camera_name || 'Cam ' + p.camera_id) + ' · ' + timeStr + '</div>';
+                        listEl.appendChild(div);
+                    });
+                })
+                .catch(() => {});
+        }
+
+        function startRecentPlatesPolling() {
+            if (recentPlatesInterval) clearInterval(recentPlatesInterval);
+            if (!document.hidden) {
+                fetchRecentPlates();
+                recentPlatesInterval = setInterval(fetchRecentPlates, 2500);
+            }
+        }
+
+        startRecentPlatesPolling();
+
+        function refreshDriverSnap() {
+            var el = document.getElementById('driverSnapImg');
+            if (el) el.src = '/api/truck/driver_snap?' + Date.now();
+        }
+        function refreshSnapGrid() {
+            var t = Date.now();
+            var elD = document.getElementById('driverSnapImg');
+            var elF = document.getElementById('plateSnapFrontImg');
+            var elB = document.getElementById('plateSnapBackImg');
+            var elW = document.getElementById('weightSnapImg');
+            if (elD) elD.src = '/api/truck/driver_snap?' + t;
+            if (elF) elF.src = '/api/truck/plate_snap/6?' + t;
+            if (elB) elB.src = '/api/truck/plate_snap/7?' + t;
+            if (elW) elW.src = '/api/truck/weight_snap?' + t;
+        }
+        function updateDriverSnapInfo() {
+            fetch('/api/truck/driver_snap_info')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var badge = document.getElementById('driverSnapBadge');
+                    var timeEl = document.getElementById('driverSnapTime');
+                    if (data.captured && data.captured_at) {
+                        if (badge) { badge.classList.add('visible'); badge.textContent = 'Yes, captured'; }
+                        if (timeEl) {
+                            var d = new Date(data.captured_at);
+                            timeEl.textContent = 'Captured at ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            timeEl.style.display = '';
+                        }
+                    } else {
+                        if (badge) badge.classList.remove('visible');
+                        if (timeEl) timeEl.style.display = 'none';
+                    }
+                })
+                .catch(function() {});
+        }
+        function startDriverSnapPolling() {
+            if (driverSnapInterval) clearInterval(driverSnapInterval);
+            if (!document.hidden) {
+                refreshSnapGrid();
+                updateDriverSnapInfo();
+                driverSnapInterval = setInterval(function() {
+                    refreshSnapGrid();
+                    updateDriverSnapInfo();
+                }, 2000);
+            }
+        }
+        startDriverSnapPolling();
+
+        function refreshPlateSnap() {
+            var t = Date.now();
+            var elF = document.getElementById('plateSnapFrontImg');
+            var elB = document.getElementById('plateSnapBackImg');
+            if (elF) elF.src = '/api/truck/plate_snap/6?' + t;
+            if (elB) elB.src = '/api/truck/plate_snap/7?' + t;
+        }
+        function updatePlateSnapInfo() {
+            fetch('/api/truck/plate_snap_info')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var badge = document.getElementById('plateSnapBadge');
+                    var numEl = document.getElementById('plateSnapNumber');
+                    var metaEl = document.getElementById('plateSnapMeta');
+                    if (data.captured && data.captured_at) {
+                        if (badge) { badge.classList.add('visible'); badge.textContent = data.plate ? 'Plate read' : 'Detected'; }
+                        if (numEl) {
+                            numEl.textContent = data.plate || '—';
+                            numEl.style.display = '';
+                        }
+                        if (metaEl) {
+                            var d = data.captured_at ? new Date(data.captured_at) : null;
+                            var t = d ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                            metaEl.textContent = (data.camera_name ? data.camera_name + ' · ' : '') + (t ? 'At ' + t : '');
+                            metaEl.style.display = '';
+                        }
+                    } else {
+                        if (badge) badge.classList.remove('visible');
+                        if (numEl) numEl.style.display = 'none';
+                        if (metaEl) metaEl.style.display = 'none';
+                    }
+                })
+                .catch(function() {});
+        }
+        function startPlateSnapPolling() {
+            if (plateSnapInterval) clearInterval(plateSnapInterval);
+            if (!document.hidden) {
+                refreshPlateSnap();
+                updatePlateSnapInfo();
+                plateSnapInterval = setInterval(function() {
+                    refreshPlateSnap();
+                    updatePlateSnapInfo();
+                }, 2000);
+            }
+        }
+        startPlateSnapPolling();
+
+        // Pause/resume updates based on page visibility
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (updateTimestampInterval) clearInterval(updateTimestampInterval);
+                if (recentPlatesInterval) clearInterval(recentPlatesInterval);
+                if (driverSnapInterval) clearInterval(driverSnapInterval);
+                if (plateSnapInterval) clearInterval(plateSnapInterval);
+            } else {
+                startUpdateTimestamp();
+                startRecentPlatesPolling();
+                startDriverSnapPolling();
+                startPlateSnapPolling();
+            }
+        });
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            if (updateTimestampInterval) clearInterval(updateTimestampInterval);
+            if (recentPlatesInterval) clearInterval(recentPlatesInterval);
+            if (driverSnapInterval) clearInterval(driverSnapInterval);
+            if (plateSnapInterval) clearInterval(plateSnapInterval);
+            // Stop camera feeds
+            const cameraImages = document.querySelectorAll('.camera-feed');
+            cameraImages.forEach((img) => {
+                img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3EUnloading...%3C/text%3E%3C/svg%3E';
+            });
+        });
+
+        // Lazy load camera feeds on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cameraImages = document.querySelectorAll('.camera-feed');
+            cameraImages.forEach((img, index) => {
+                img.loading = 'lazy';
+                // Add error handling to prevent continuous retries
+                let errorCount = 0;
+                const maxRetries = 2;
+                const originalSrc = img.src;
+                
+                img.onerror = function() {
+                    errorCount++;
+                    if (errorCount <= maxRetries && !document.hidden) {
+                        setTimeout(() => {
+                            if (!document.hidden && errorCount <= maxRetries) {
+                                img.src = '';
+                                img.src = originalSrc;
+                            }
+                        }, 3000);
+                    } else {
+                        img.onerror = null; // Stop retrying
+                    }
+                };
+            });
+        });
+
+        // Set active navigation based on current page
+        function setActiveNavigation() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                if (href === currentPath || (currentPath === '/' && href === '/')) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Initialize navigation on page load
+        document.addEventListener('DOMContentLoaded', setActiveNavigation);
+    </script>
+</body>
+</html>
+

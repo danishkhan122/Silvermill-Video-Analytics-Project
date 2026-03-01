@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SilverMill Smart Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            animation: gradientShift 12s ease infinite;
+            z-index: 0;
+            will-change: background;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(106, 17, 203, 0.15) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+            will-change: transform;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            }
+            50% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #1a2540 40%, #3d4a68 60%, #6b7280 80%, #9ca3af 100%);
+            }
+        }
+
+        /* Reduce animation performance impact */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(106, 17, 203, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+            will-change: transform, opacity;
+        }
+
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation-delay: 0s; animation-duration: 15s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 30%; animation-delay: 2s; animation-duration: 18s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 50%; animation-delay: 4s; animation-duration: 20s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 70%; animation-delay: 1s; animation-duration: 16s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 90%; animation-delay: 3s; animation-duration: 22s; }
+        .particle:nth-child(6) { width: 3px; height: 3px; left: 20%; animation-delay: 5s; animation-duration: 17s; }
+        .particle:nth-child(7) { width: 5px; height: 5px; left: 60%; animation-delay: 2.5s; animation-duration: 19s; }
+        .particle:nth-child(8) { width: 4px; height: 4px; left: 80%; animation-delay: 1.5s; animation-duration: 21s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(50px) scale(1); opacity: 0; }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-section {
+            padding: 12px 12px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-section {
+            padding: 10px 0 20px 0;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            position: relative;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-left-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(106, 17, 203, 0.35) 0%, rgba(37, 117, 252, 0.25) 100%);
+            color: #fff;
+            border-left-color: #a78bfa;
+            box-shadow: 0 2px 14px rgba(106, 17, 203, 0.4);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: transform 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .user-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .user-logo:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .info-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(106, 17, 203, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            width: calc(100vw - 480px);
+            min-width: 0;
+            margin-left: 200px;
+            margin-right: 280px;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .main-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("{{ url_for('static', filename='images/coconut_tp.png') }}") no-repeat center bottom;
+            background-size: min(420px, 45vw) auto;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .top-header {
+            background: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+        }
+
+        .greeting-section h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .greeting-section p {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .notification-bell {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            background: #f3f4f6;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border: 2px solid white;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f9fafb;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: #f3f4f6;
+        }
+
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        .profile-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            padding: 16px 24px;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card.coconut {
+            border-left-color: #10b981;
+        }
+
+        .metric-card.truck {
+            border-left-color: #3b82f6;
+        }
+
+        .metric-card.weight {
+            border-left-color: #f59e0b;
+        }
+
+        .metric-card.accuracy {
+            border-left-color: #8b5cf6;
+        }
+        .metric-card.driver {
+            border-left-color: #2575fc;
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .metric-icon.coconut {
+            background: #d1fae5;
+        }
+
+        .metric-icon.truck {
+            background: #dbeafe;
+        }
+
+        .metric-icon.weight {
+            background: #fed7aa;
+        }
+
+        .metric-icon.accuracy {
+            background: #e9d5ff;
+        }
+
+        .metric-icon.driver {
+            background: #dbeafe;
+        }
+
+        .metric-info h3 {
+            font-size: 9px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: #10b981;
+        }
+
+        .metric-change.negative {
+            color: #ef4444;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .card-subtitle {
+            font-size: 9px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            min-height: 200px;
+            max-height: 200px;
+        }
+
+        /* Quick Access Cards */
+        .quick-access-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .quick-access-card {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 2px solid transparent;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .quick-access-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: #6a11cb;
+        }
+
+        .quick-access-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+
+        .quick-access-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .quick-access-desc {
+            font-size: 9px;
+            color: #6b7280;
+        }
+
+        /* Activities List */
+        .activities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 350px;
+            max-height: 350px;
+            min-height: 350px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .activities-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .activities-list::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .activities-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .activity-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: #111827;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .activity-entry:hover {
+            background: #1f2937;
+        }
+
+        .activity-empty {
+            padding: 24px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .activity-status-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .activity-status-icon.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .activity-status-icon.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .activity-status-icon.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .activity-status-icon.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .activity-description {
+            font-size: 9px;
+            color: #e5e7eb;
+            margin-bottom: 6px;
+        }
+
+        .activity-time {
+            font-size: 8px;
+            color: #d1d5db;
+        }
+
+        /* Right Sidebar */
+        .right-sidebar {
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+        }
+
+        .right-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .right-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .right-sidebar-section {
+            padding: 16px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            min-width: 0;
+        }
+
+        .right-sidebar-section h3 {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .right-sidebar-item {
+            padding: 10px;
+            margin: 4px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .right-sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(-4px);
+        }
+
+        .right-sidebar-item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .right-sidebar-item-desc {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            background: rgba(106, 17, 203, 0.2);
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 9px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Camera Feeds Section */
+        .cameras-section {
+            margin-bottom: 20px;
+        }
+
+        .cameras-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .cameras-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
+            color: #1a1a2e;
+            transition: all 0.3s ease;
+        }
+
+        .cameras-toggle:hover {
+            background: #f9fafb;
+            border-color: #6a11cb;
+        }
+
+        .cameras-grid-container {
+            display: none;
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .cameras-grid-container.active {
+            display: block;
+        }
+
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .camera-feed-box {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .camera-feed-title {
+            font-size: 9px;
+            font-weight: 600;
+            color: #00bfff;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .camera-feed-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .camera-feed-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .camera-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            animation: pulse 3s ease-in-out infinite;
+            will-change: opacity, transform;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .main-content {
+                width: calc(100vw - 480px);
+                margin-left: 200px;
+                margin-right: 280px;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .quick-access-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .cameras-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .sidebar {
+                width: 200px;
+                min-width: 200px;
+                max-width: 200px;
+            }
+            .right-sidebar {
+                display: none;
+                width: 0;
+            }
+            .main-content {
+                width: calc(100vw - 200px);
+                margin-left: 200px;
+                margin-right: 0;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            .quick-access-grid {
+                grid-template-columns: 1fr;
+            }
+            .cameras-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="SilverMill Logo"
+                 class="logo-img">
+        </div>
+
+        <div class="nav-section">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">◉</div>
+                <span>Dashboard</span>
+            </a>
+            <a href="/live_camera" class="nav-item">
+                <div class="nav-icon">▶</div>
+                <span>Live Cameras</span>
+            </a>
+            <a href="/coconut_count" class="nav-item">
+                <div class="nav-icon">◎</div>
+                <span>Coconut Count</span>
+            </a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item">
+                <div class="nav-icon">▣</div>
+                <span>Truck Verification</span>
+            </a>
+            <a href="/weight_check" class="nav-item">
+                <div class="nav-icon">☰</div>
+                <span>Coconut Summary</span>
+            </a>
+            <a href="/truck_summary" class="nav-item">
+                <div class="nav-icon">▤</div>
+                <span>Truck Summary</span>
+            </a>
+            <a href="/system" class="nav-item">
+                <div class="nav-icon">⚙</div>
+                <span>System</span>
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item">
+                <div class="nav-icon">⎋</div>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="/login" class="nav-item">
+                <div class="nav-icon">🔐</div>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}"
+                 alt="User Logo"
+                 class="user-logo">
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">v2.1.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="info-value">Online</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Build</span>
+                <span class="info-value">2024.12</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">© 2024</span>
+                <span class="info-value">SilverMill</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <div class="greeting-section">
+                <h2 id="greeting">Good morning, Admin</h2>
+                <p>Welcome to SilverMill Smart Dashboard - Real-time operations overview</p>
+            </div>
+            <div class="header-actions">
+                <div class="notification-bell">
+                    🔔
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+                <div class="user-profile">
+                    <div class="profile-avatar">A</div>
+                    <div class="profile-name">Admin</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Quick Access Cards -->
+            <div class="quick-access-grid">
+                <a href="/live_camera" class="quick-access-card">
+                    <div class="quick-access-icon">📹</div>
+                    <div class="quick-access-title">AI Live Vision</div>
+                    <div class="quick-access-desc">Live camera feeds</div>
+                </a>
+                <a href="/coconut_count" class="quick-access-card">
+                    <div class="quick-access-icon">🥥</div>
+                    <div class="quick-access-title">Coconut Count</div>
+                    <div class="quick-access-desc" id="quickCoconuts">— Today</div>
+                </a>
+                <a href="/truck_lnpr_driver_snap" class="quick-access-card">
+                    <div class="quick-access-icon">👤</div>
+                    <div class="quick-access-title">Driver Capture</div>
+                    <div class="quick-access-desc" id="quickAccuracy">— Accuracy</div>
+                </a>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card coconut">
+                    <div class="metric-header">
+                        <div>
+                            <h3>Total Coconuts Today</h3>
+                            <div class="metric-value" id="totalCoconuts">—</div>
+                        </div>
+                        <div class="metric-icon coconut">🥥</div>
+                    </div>
+                    <div class="metric-change" id="coconutChange"></div>
+                </div>
+
+                <div class="metric-card truck">
+                    <div class="metric-header">
+                        <div>
+                            <h3>Total Number Plates Processed</h3>
+                            <div class="metric-value" id="totalPlatesProcessed">—</div>
+                        </div>
+                        <div class="metric-icon truck">🚚</div>
+                    </div>
+                    <div class="metric-change" id="truckChange"></div>
+                </div>
+
+                <div class="metric-card weight">
+                    <div class="metric-header">
+                        <div>
+                            <h3>Total Weight (kg)</h3>
+                            <div class="metric-value" id="totalWeight">—</div>
+                        </div>
+                        <div class="metric-icon weight">⚖️</div>
+                    </div>
+                    <div class="metric-change" id="weightChange"></div>
+                </div>
+
+                <div class="metric-card driver">
+                    <div class="metric-header">
+                        <div>
+                            <h3>Total Driver Snaps</h3>
+                            <div class="metric-value" id="totalDriverSnaps">—</div>
+                        </div>
+                        <div class="metric-icon driver">👤</div>
+                    </div>
+                    <div class="metric-change" id="driverSnapsChange"></div>
+                </div>
+            </div>
+
+            <!-- Camera Feeds Section -->
+            <div class="cameras-section">
+                <div class="cameras-header">
+                    <div>
+                        <div class="card-title">Live Camera Feeds</div>
+                        <div class="card-subtitle">All 10 active cameras monitoring</div>
+                    </div>
+                    <button class="cameras-toggle" onclick="toggleCameras()" id="camerasToggle">
+                        <span id="toggleText">Show All Cameras</span>
+                        <span id="toggleIcon">▼</span>
+                    </button>
+                </div>
+                <div class="cameras-grid-container" id="camerasGrid">
+                    <div class="cameras-grid">
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 1 - Coconut Line 1</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/0" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 1" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 2 - Coconut Line 2</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/1" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 2" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 3 - Coconut Line 3</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 3" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 4 - Truck Bay 1</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/3" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 4" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 5 - Truck Bay 2</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/4" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 5" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 6 - Truck Bay 3</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/5" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 6" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 7 - License Plate 1</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/6" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 7" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 8 - License Plate 2</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/7" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 8" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 9 - Driver Verification</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/8" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 9" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                        <div class="camera-feed-box">
+                            <div class="camera-feed-title">Camera 10 - Additional Monitoring</div>
+                            <div class="camera-status"></div>
+                            <div class="camera-feed-container">
+                                <img data-src="/video_feed/10" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect fill='%23000' width='800' height='600'/%3E%3Ctext fill='%23fff' font-family='Arial' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3ELoading...%3C/text%3E%3C/svg%3E" alt="Camera 10" 
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Production Chart -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Daily Production Trend</div>
+                            <div class="card-subtitle">Last 7 days performance</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="productionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Recent Activities</div>
+                            <div class="card-subtitle">Live system events</div>
+                        </div>
+                    </div>
+                    <div class="activities-list" id="recentActivitiesList">
+                        <div class="activity-empty" id="recentActivitiesEmpty">No recent activity</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Performance Chart -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">System Performance Overview</div>
+                        <div class="card-subtitle">Operations efficiency metrics</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="right-sidebar">
+        <div class="right-sidebar-section">
+            <h3>Quick Actions</h3>
+            <div class="right-sidebar-item">
+                <div class="right-sidebar-item-title">📊 View Reports</div>
+                <div class="right-sidebar-item-desc">Analytics & insights</div>
+            </div>
+            <div class="right-sidebar-item">
+                <div class="right-sidebar-item-title">⚙️ System Settings</div>
+                <div class="right-sidebar-item-desc">Configure system</div>
+            </div>
+            <div class="right-sidebar-item">
+                <div class="right-sidebar-item-title">📥 Export Data</div>
+                <div class="right-sidebar-item-desc">Download reports</div>
+            </div>
+            <div class="right-sidebar-item">
+                <div class="right-sidebar-item-title">🔔 Notifications</div>
+                <div class="right-sidebar-item-desc">View all alerts</div>
+            </div>
+        </div>
+
+        <div class="right-sidebar-section">
+            <h3>Recent Activity</h3>
+            <div id="sidebarActivityList">
+                <div class="right-sidebar-item-desc" style="color: rgba(255,255,255,0.6);">No recent activity</div>
+            </div>
+        </div>
+
+        <div class="right-sidebar-section">
+            <h3>System Status</h3>
+            <div class="right-sidebar-item load-line-item">
+                <div class="right-sidebar-item-title">[Load]</div>
+                <div class="right-sidebar-item-desc" id="systemLoadLine">—</div>
+            </div>
+            <div class="right-sidebar-item">
+                <div class="right-sidebar-item-title">📊 Performance</div>
+                <div class="right-sidebar-item-desc" id="performanceDesc">—</div>
+            </div>
+            <div class="right-sidebar-item">
+                <div class="right-sidebar-item-title">📹 Cameras</div>
+                <div class="right-sidebar-item-desc" id="camerasDesc">—</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update greeting based on time
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            const greetingElement = document.getElementById('greeting');
+            let greeting;
+            
+            if (hour < 12) {
+                greeting = 'Good morning';
+            } else if (hour < 17) {
+                greeting = 'Good afternoon';
+            } else {
+                greeting = 'Good evening';
+            }
+            
+            greetingElement.textContent = greeting + ', Admin';
+        }
+        
+        updateGreeting();
+        setInterval(updateGreeting, 3600000);
+
+        // Daily Production Chart
+        const productionCtx = document.getElementById('productionChart').getContext('2d');
+        const productionChart = new Chart(productionCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Coconuts',
+                    data: [0, 0, 0, 0, 0, 0, 0],
+                    borderColor: 'rgba(106, 17, 203, 1)',      // Purple from theme
+                    backgroundColor: 'rgba(106, 17, 203, 0.15)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(106, 17, 203, 1)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }, {
+                    label: 'Trucks',
+                    data: [0, 0, 0, 0, 0, 0, 0],
+                    borderColor: 'rgba(37, 117, 252, 1)',      // Blue from theme
+                    backgroundColor: 'rgba(37, 117, 252, 0.15)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(37, 117, 252, 1)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 10,
+                                weight: '600',
+                                family: "'Inter', 'Poppins', sans-serif"
+                            },
+                            padding: 12,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        padding: 10,
+                        titleFont: {
+                            size: 11,
+                            weight: 'bold',
+                            family: "'Inter', 'Poppins', sans-serif"
+                        },
+                        bodyFont: {
+                            size: 11,
+                            weight: '600',
+                            family: "'Inter', 'Poppins', sans-serif"
+                        },
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1.5,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 9,
+                                weight: '600',
+                                family: "'Inter', 'Poppins', sans-serif"
+                            },
+                            color: '#6b7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 9,
+                                weight: '600',
+                                family: "'Inter', 'Poppins', sans-serif"
+                            },
+                            color: '#6b7280'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 800,
+                    easing: 'easeOutCubic'
+                }
+            }
+        });
+
+        // System Performance Chart with beautiful vibrant colors
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Coconut Count', 'Driver Capture', 'Weight Check', 'License Plate'],
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        'rgba(106, 17, 203, 0.9)',    // Purple from theme (#6a11cb)
+                        'rgba(30, 64, 175, 0.9)',     // Blue shade (#1e40af)
+                        'rgba(139, 92, 246, 0.9)',    // Purple shade (#8b5cf6)
+                        'rgba(59, 130, 246, 0.9)'     // Blue (#3b82f6)
+                    ],
+                    borderColor: [
+                        'rgba(106, 17, 203, 1)',     // Purple border
+                        'rgba(30, 64, 175, 1)',      // Blue shade border
+                        'rgba(139, 92, 246, 1)',     // Purple shade border
+                        'rgba(59, 130, 246, 1)'       // Blue border
+                    ],
+                    borderWidth: 3,
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    barThickness: 60,
+                    maxBarThickness: 65
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        padding: 12,
+                        titleFont: {
+                            size: 11,
+                            weight: 'bold',
+                            family: "'Inter', 'Poppins', sans-serif"
+                        },
+                        bodyFont: {
+                            size: 11,
+                            weight: '600',
+                            family: "'Inter', 'Poppins', sans-serif"
+                        },
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1.5,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxPadding: 6,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Efficiency: ' + context.parsed.y + '%';
+                            },
+                            labelColor: function(context) {
+                                const colors = [
+                                    'rgba(106, 17, 203, 1)',  // Purple
+                                    'rgba(37, 117, 252, 1)',  // Blue
+                                    'rgba(30, 64, 175, 1)',   // Blue shade
+                                    'rgba(139, 92, 246, 1)',  // Purple shade
+                                    'rgba(59, 130, 246, 1)'   // Blue
+                                ];
+                                return {
+                                    borderColor: colors[context.dataIndex],
+                                    backgroundColor: colors[context.dataIndex],
+                                    width: 10,
+                                    height: 10
+                                };
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10,
+                                weight: '600',
+                                family: "'Inter', 'Poppins', sans-serif"
+                            },
+                            color: '#4b5563',
+                            padding: 10
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.08)',
+                            lineWidth: 1.5,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10,
+                                weight: '600',
+                                family: "'Inter', 'Poppins', sans-serif"
+                            },
+                            color: '#6b7280',
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            stepSize: 10,
+                            padding: 8
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutCubic',
+                    delay: function(context) {
+                        return context.dataIndex * 100;
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+        // Add gradient effect after chart is rendered
+        setTimeout(() => {
+            const chartArea = performanceChart.chartArea;
+            if (chartArea) {
+                const ctx = performanceChart.ctx;
+                const meta = performanceChart.getDatasetMeta(0);
+                const gradients = [
+                    ['rgba(106, 17, 203, 0.95)', 'rgba(139, 92, 246, 0.75)'],  // Purple gradient
+                    ['rgba(30, 64, 175, 0.95)', 'rgba(30, 58, 138, 0.75)'],   // Blue shade gradient
+                    ['rgba(139, 92, 246, 0.95)', 'rgba(106, 17, 203, 0.75)'], // Purple shade gradient
+                    ['rgba(59, 130, 246, 0.95)', 'rgba(37, 99, 235, 0.75)']   // Blue gradient
+                ];
+                
+                meta.data.forEach((bar, index) => {
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, gradients[index][0]);
+                    gradient.addColorStop(1, gradients[index][1]);
+                    performanceChart.data.datasets[0].backgroundColor[index] = gradient;
+                });
+                performanceChart.update('none');
+            }
+        }, 100);
+
+        // System Performance chart: fetch efficiency data from database
+        function updatePerformanceChartFromDb() {
+            fetch('/api/operations_efficiency')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (typeof performanceChart === 'undefined') return;
+                    performanceChart.data.datasets[0].data = [
+                        Math.min(100, Math.max(0, parseFloat(data.coconut_count) || 0)),
+                        Math.min(100, Math.max(0, parseFloat(data.driver_capture) || 0)),
+                        Math.min(100, Math.max(0, parseFloat(data.weight_check) || 0)),
+                        Math.min(100, Math.max(0, parseFloat(data.license_plate) || 0))
+                    ];
+                    performanceChart.update('active');
+                })
+                .catch(function() {});
+        }
+        updatePerformanceChartFromDb();
+        var performanceChartInterval = setInterval(updatePerformanceChartFromDb, 10000);
+
+        // Hide notification badge when zero
+        (function() {
+            const badge = document.getElementById('notificationCount');
+            if (badge && badge.textContent === '0') badge.style.display = 'none';
+        })();
+
+        // Set active navigation based on current page
+        function setActiveNavigation() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                if (href === currentPath || (currentPath === '/' && href === '/')) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Dashboard: coconut totals from database (today's summary)
+        let dashboardCoconutInterval = null;
+        let lastCoconutTotal = null;
+        function updateDashboardCoconutCount() {
+            fetch('/api/coconut_today_summary')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var total = parseInt(data.total_today || 0, 10);
+                    var belt1 = parseInt(data.belt1_today || 0, 10);
+                    var belt2 = parseInt(data.belt2_today || 0, 10);
+                    var belt3 = parseInt(data.belt3_today || 0, 10);
+                    var accuracy = data.accuracy != null && data.accuracy !== '' ? data.accuracy : '—';
+                    var el = document.getElementById('totalCoconuts');
+                    if (el) el.textContent = total.toLocaleString();
+                    var quickEl = document.getElementById('quickCoconuts');
+                    if (quickEl) quickEl.textContent = total.toLocaleString() + ' Today';
+                    var changeEl = document.getElementById('coconutChange');
+                    if (changeEl) {
+                        if (lastCoconutTotal !== null && total !== lastCoconutTotal) {
+                            var diff = total - lastCoconutTotal;
+                            changeEl.textContent = (diff >= 0 ? '+' : '') + diff + ' since last check';
+                            changeEl.className = 'metric-change ' + (diff >= 0 ? 'positive' : 'negative');
+                        } else {
+                            changeEl.textContent = accuracy !== '—' ? 'Accuracy ' + accuracy : 'From database';
+                            changeEl.className = 'metric-change';
+                        }
+                    }
+                    lastCoconutTotal = total;
+                })
+                .catch(function() {
+                    var el = document.getElementById('totalCoconuts');
+                    if (el && el.textContent === '—') el.textContent = '0';
+                    var quickEl = document.getElementById('quickCoconuts');
+                    if (quickEl && quickEl.textContent === '— Today') quickEl.textContent = '— Today';
+                });
+        }
+        function startDashboardCoconutUpdates() {
+            updateDashboardCoconutCount();
+            if (dashboardCoconutInterval) clearInterval(dashboardCoconutInterval);
+            dashboardCoconutInterval = setInterval(updateDashboardCoconutCount, 5000);
+        }
+
+        // Dashboard info: system load, project, DB, events (replaces system_load only)
+        var systemLoadInterval = null;
+        function formatUptime(sec) {
+            if (sec < 60) return sec + 's';
+            if (sec < 3600) return Math.floor(sec / 60) + 'm ' + (sec % 60) + 's';
+            var h = Math.floor(sec / 3600);
+            var m = Math.floor((sec % 3600) / 60);
+            if (h < 24) return h + 'h ' + m + 'm';
+            var d = Math.floor(h / 24);
+            return d + 'd ' + (h % 24) + 'h ' + m + 'm';
+        }
+        function formatEventTime(iso) {
+            if (!iso) return '—';
+            var d = new Date(iso);
+            var now = new Date();
+            var diff = (now - d) / 1000;
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        function updateDashboardInfo() {
+            fetch('/api/dashboard_info')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var d = data.load || {};
+                    var parts = [];
+                    if (d.cpu_pct != null) {
+                        parts.push('CPU ' + Math.round(d.cpu_pct) + '%');
+                        parts.push('RAM ' + Math.round(d.ram_pct) + '% (' + d.ram_used_m + 'M/' + d.ram_total_m + 'M)');
+                    } else parts.push('CPU N/A');
+                    if (d.gpu_util != null || d.gpu_mem_used != null) {
+                        var g = 'GPU';
+                        if (d.gpu_util != null) g += ' ' + d.gpu_util;
+                        if (d.gpu_mem_used != null && d.gpu_mem_total != null) g += ' Mem ' + d.gpu_mem_used + '/' + d.gpu_mem_total + 'MB';
+                        else if (d.gpu_mem_used != null) g += ' Mem ' + d.gpu_mem_used + 'MB';
+                        parts.push(g);
+                    }
+                    parts.push('Detection ' + (d.detection || 'OFF'));
+                    parts.push('Cameras ' + (data.cameras_active || 0) + '/' + (data.cameras_total || 10));
+                    var loadEl = document.getElementById('systemLoadLine');
+                    if (loadEl) loadEl.textContent = parts.join(' | ');
+                    var perfParts = [];
+                    if (d.cpu_pct != null) perfParts.push('CPU ' + Math.round(d.cpu_pct) + '%', 'RAM ' + Math.round(d.ram_pct) + '%');
+                    if (d.gpu_util != null || d.gpu_mem_used != null) perfParts.push('GPU ' + (d.gpu_util || d.gpu_mem_used + 'MB') + '');
+                    var perfEl = document.getElementById('performanceDesc');
+                    if (perfEl) perfEl.textContent = perfParts.length ? perfParts.join(' | ') : '—';
+                    var camEl = document.getElementById('camerasDesc');
+                    if (camEl) camEl.textContent = 'Detection ' + (d.detection || 'OFF') + ' | Cameras ' + (data.cameras_active || 0) + '/' + (data.cameras_total || 10);
+
+                    var events = data.system_events || [];
+                    var listEl = document.getElementById('recentActivitiesList');
+                    var emptyEl = document.getElementById('recentActivitiesEmpty');
+                    if (listEl) {
+                        if (events.length === 0) {
+                            if (emptyEl) emptyEl.style.display = 'block';
+                            listEl.querySelectorAll('.activity-entry').forEach(function(n) { n.remove(); });
+                        } else {
+                            if (emptyEl) emptyEl.style.display = 'none';
+                            var wanted = events.slice(-15).reverse();
+                            listEl.querySelectorAll('.activity-entry').forEach(function(n) { n.remove(); });
+                            wanted.forEach(function(ev) {
+                                var cls = ev.level === 'success' ? 'success' : ev.level === 'error' ? 'error' : ev.level === 'warning' ? 'warning' : 'info';
+                                var icon = cls === 'success' ? '✓' : cls === 'error' ? '!' : 'i';
+                                var div = document.createElement('div');
+                                div.className = 'activity-entry';
+                                div.innerHTML = '<div class="activity-status-icon ' + cls + '">' + icon + '</div><div class="activity-details"><div class="activity-title">' + (ev.message || '').replace(/</g, '&lt;') + '</div><div class="activity-time">' + formatEventTime(ev.time) + '</div></div>';
+                                listEl.appendChild(div);
+                            });
+                        }
+                    }
+                    var sidebarList = document.getElementById('sidebarActivityList');
+                    if (sidebarList && events.length > 0) {
+                        var last = events[events.length - 1];
+                        sidebarList.innerHTML = '<div class="activity-item"><div class="activity-icon">' + (last.level === 'success' ? '✓' : 'i') + '</div><div class="activity-content"><div class="activity-title">' + (last.message || '') + '</div><div class="activity-time">' + formatEventTime(last.time) + '</div></div></div>';
+                    }
+                })
+                .catch(function() {
+                    var loadEl = document.getElementById('systemLoadLine');
+                    if (loadEl) loadEl.textContent = '—';
+                });
+        }
+        function startSystemLoadUpdates() {
+            updateDashboardInfo();
+            if (systemLoadInterval) clearInterval(systemLoadInterval);
+            systemLoadInterval = setInterval(updateDashboardInfo, 2500);
+        }
+
+        // Initialize navigation and dashboard counts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveNavigation();
+            startDashboardCoconutUpdates();
+            startSystemLoadUpdates();
+        });
+
+        // Toggle cameras visibility with lazy loading
+        let camerasLoaded = false;
+        function toggleCameras() {
+            const camerasGrid = document.getElementById('camerasGrid');
+            const toggleText = document.getElementById('toggleText');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (camerasGrid.classList.contains('active')) {
+                camerasGrid.classList.remove('active');
+                toggleText.textContent = 'Show All Cameras';
+                toggleIcon.textContent = '▼';
+                // Stop loading camera feeds when hidden
+                stopCameraFeeds();
+            } else {
+                camerasGrid.classList.add('active');
+                toggleText.textContent = 'Hide Cameras';
+                toggleIcon.textContent = '▲';
+                // Lazy load camera feeds only when shown
+                if (!camerasLoaded) {
+                    loadCameraFeeds();
+                    camerasLoaded = true;
+                }
+            }
+        }
+
+        // Lazy load camera feeds
+        function loadCameraFeeds() {
+            const cameraImages = document.querySelectorAll('.camera-feed-container img');
+            cameraImages.forEach((img) => {
+                // Only load if not already loaded and has data-src
+                if (!img.dataset.loaded && img.dataset.src) {
+                    img.src = img.dataset.src;
+                    img.dataset.loaded = 'true';
+                }
+            });
+        }
+
+        // Stop camera feeds to save resources
+        function stopCameraFeeds() {
+            const cameraImages = document.querySelectorAll('.camera-feed-container img');
+            cameraImages.forEach((img) => {
+                if (img.dataset.loaded) {
+                    // Replace with placeholder to stop loading
+                    img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ECamera Hidden%3C/text%3E%3C/svg%3E';
+                }
+            });
+        }
+
+        // Pause coconut count, performance chart, and system load updates when tab hidden
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (dashboardCoconutInterval) {
+                    clearInterval(dashboardCoconutInterval);
+                    dashboardCoconutInterval = null;
+                }
+                if (performanceChartInterval) {
+                    clearInterval(performanceChartInterval);
+                    performanceChartInterval = null;
+                }
+                if (systemLoadInterval) {
+                    clearInterval(systemLoadInterval);
+                    systemLoadInterval = null;
+                }
+            } else {
+                startDashboardCoconutUpdates();
+                updatePerformanceChartFromDb();
+                if (!performanceChartInterval) performanceChartInterval = setInterval(updatePerformanceChartFromDb, 10000);
+                startSystemLoadUpdates();
+            }
+        });
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            stopCameraFeeds();
+            if (dashboardCoconutInterval) clearInterval(dashboardCoconutInterval);
+            if (performanceChartInterval) clearInterval(performanceChartInterval);
+            if (systemLoadInterval) clearInterval(systemLoadInterval);
+        });
+    </script>
+</body>
+</html>

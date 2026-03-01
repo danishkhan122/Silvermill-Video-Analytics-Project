@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Live Vision - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar Styles - Same as other pages */
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            animation: gradientShift 12s ease infinite;
+            z-index: 0;
+            will-change: background;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(106, 17, 203, 0.15) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+            will-change: transform;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            }
+            50% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #1a2540 40%, #3d4a68 60%, #6b7280 80%, #9ca3af 100%);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(106, 17, 203, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+            will-change: transform, opacity;
+        }
+
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation-delay: 0s; animation-duration: 15s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 30%; animation-delay: 2s; animation-duration: 18s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 50%; animation-delay: 4s; animation-duration: 20s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 70%; animation-delay: 1s; animation-duration: 16s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 90%; animation-delay: 3s; animation-duration: 22s; }
+        .particle:nth-child(6) { width: 3px; height: 3px; left: 20%; animation-delay: 5s; animation-duration: 17s; }
+        .particle:nth-child(7) { width: 5px; height: 5px; left: 60%; animation-delay: 2.5s; animation-duration: 19s; }
+        .particle:nth-child(8) { width: 4px; height: 4px; left: 80%; animation-delay: 1.5s; animation-duration: 21s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(50px) scale(1); opacity: 0; }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-section {
+            padding: 12px 12px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-section {
+            padding: 10px 0 20px 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            position: relative;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-left-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(106, 17, 203, 0.35) 0%, rgba(37, 117, 252, 0.25) 100%);
+            color: #fff;
+            border-left-color: #a78bfa;
+            box-shadow: 0 2px 14px rgba(106, 17, 203, 0.4);
+        }
+
+        /* Reduce animation performance impact */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: transform 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .user-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .user-logo:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .info-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(106, 17, 203, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            width: calc(100vw - 200px);
+            min-width: 0;
+            margin-left: 200px;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .main-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("{{ url_for('static', filename='images/coconut_tp.png') }}") no-repeat center bottom;
+            background-size: min(420px, 45vw) auto;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .top-header {
+            background: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-icon {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .info-icon:hover {
+            background: #f3f4f6;
+        }
+
+        .info-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border: 2px solid white;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: #ffffff;
+            padding: 12px 32px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .stat-value.success {
+            color: #10b981;
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            padding: 20px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+        }
+
+        /* Camera Grid */
+        .cameras-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            overflow: visible;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: minmax(280px, 1fr);
+            grid-template-rows: repeat(4, minmax(280px, 1fr));
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+            padding: 8px 0;
+        }
+
+        .camera-box {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 280px;
+            max-height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .camera-box.active {
+            border: 3px solid #f59e0b;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .camera-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #00bfff;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .camera-feed {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            flex: 1;
+            min-height: 200px;
+        }
+
+        .camera-feed img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+            padding: 8px 12px;
+            color: white;
+            font-size: 11px;
+        }
+
+        .plate-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .driver-overlay {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .driver-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .driver-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .driver-name {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .driver-status {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Right Sidebar */
+        .right-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Notification Center */
+        .notification-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .notifications-list {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .notifications-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notifications-list::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .notifications-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #f9fafb;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .notification-icon.alert {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .notification-icon.info {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            font-size: 10px;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Activity Log */
+        .activity-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .activity-list {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .activity-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .activity-list::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .activity-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+
+        .activity-item:hover {
+            background: #f9fafb;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .activity-dot.blue {
+            background: #3b82f6;
+        }
+
+        .activity-dot.green {
+            background: #10b981;
+        }
+
+        .activity-dot.yellow {
+            background: #f59e0b;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 10px;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .activity-time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .cameras-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                gap: 18px;
+            }
+            .camera-box {
+                min-height: 260px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .cameras-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(5, 1fr);
+                gap: 16px;
+            }
+            .camera-box {
+                min-height: 240px;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .cameras-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(5, 1fr);
+                gap: 14px;
+            }
+            .camera-box {
+                min-height: 220px;
+                padding: 10px;
+            }
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .cameras-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(10, auto);
+                gap: 12px;
+            }
+            .camera-box {
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="SilverMill Logo"
+                 class="logo-img">
+        </div>
+
+        <div class="nav-section">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">◉</div>
+                <span>Dashboard</span>
+            </a>
+            <a href="/live_camera" class="nav-item">
+                <div class="nav-icon">▶</div>
+                <span>Live Cameras</span>
+            </a>
+            <a href="/coconut_count" class="nav-item">
+                <div class="nav-icon">◎</div>
+                <span>Coconut Count</span>
+            </a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item">
+                <div class="nav-icon">▣</div>
+                <span>Truck Verification</span>
+            </a>
+            <a href="/weight_check" class="nav-item">
+                <div class="nav-icon">☰</div>
+                <span>Coconut Summary</span>
+            </a>
+            <a href="/truck_summary" class="nav-item">
+                <div class="nav-icon">▤</div>
+                <span>Truck Summary</span>
+            </a>
+            <a href="/system" class="nav-item">
+                <div class="nav-icon">⚙</div>
+                <span>System</span>
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item">
+                <div class="nav-icon">⎋</div>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="/login" class="nav-item">
+                <div class="nav-icon">🔐</div>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}"
+                 alt="User Logo"
+                 class="user-logo">
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">v2.1.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="info-value">Online</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Build</span>
+                <span class="info-value">2024.12</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">© 2024</span>
+                <span class="info-value">SilverMill</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <h1 class="page-title">AI Live Vision - Multi-Camera Monitoring</h1>
+            <div class="header-actions">
+                <div class="info-icon" onclick="toggleModal()">
+                    <span>ℹ️</span>
+                    <span class="info-badge">5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Total Cameras Active:</span>
+                <span class="stat-value" id="activeCameras">10</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Live Throughput:</span>
+                <span class="stat-value">220/min</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">System Health:</span>
+                <span class="stat-value success">OK</span>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Camera Grid -->
+            <div class="cameras-container">
+                <div class="cameras-grid">
+                    <!-- Row 1: Coconut Counting - Belt 1 (Cam 1–2) -->
+                    <div class="camera-box">
+                        <div class="camera-title">Coconut Count - Belt 1 (Cam 1)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-0" src="/video_feed/0" alt="Camera 1" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">Live</div>
+                        </div>
+                    </div>
+
+                    <div class="camera-box">
+                        <div class="camera-title">Coconut Count - Belt 1 (Cam 2)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-1" src="/video_feed/1" alt="Camera 2" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">Live</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Coconut Counting - Belt 2 (Cam 3–4) -->
+                    <div class="camera-box">
+                        <div class="camera-title">Coconut Count - Belt 2 (Cam 3)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-2" src="/video_feed/2" alt="Camera 3" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">Live</div>
+                        </div>
+                    </div>
+
+                    <div class="camera-box">
+                        <div class="camera-title">Coconut Count - Belt 2 (Cam 4)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-3" src="/video_feed/3" alt="Camera 4" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">Live</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Coconut Counting - Belt 3 (Cam 5–6) -->
+                    <div class="camera-box">
+                        <div class="camera-title">Coconut Count - Belt 3 (Cam 5)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-4" src="/video_feed/4" alt="Camera 5" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">Live</div>
+                        </div>
+                    </div>
+
+                    <div class="camera-box">
+                        <div class="camera-title">Coconut Count - Belt 3 (Cam 6)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-5" src="/video_feed/5" alt="Camera 6" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">Live</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: License Plates & Driver (Cam 7–9) -->
+                    <div class="camera-box">
+                        <div class="camera-title">Front Number Plate (Cam 7)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-6" src="/video_feed/6" alt="Front Plate Camera"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="plate-overlay">—</div>
+                        </div>
+                    </div>
+
+                    <div class="camera-box">
+                        <div class="camera-title">Back Number Plate (Cam 8)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-7" src="/video_feed/7" alt="Back Plate Camera"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="plate-overlay">—</div>
+                        </div>
+                    </div>
+
+                    <div class="camera-box active">
+                        <div class="camera-title">Driver Snap (Cam 9)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-8" src="/video_feed/8" alt="Driver Camera"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="driver-overlay">
+                                <div class="driver-avatar">—</div>
+                                <div class="driver-info">
+                                    <div class="driver-name">—</div>
+                                    <div class="driver-status">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 5: Weight Camera (Cam 10) -->
+                    <div class="camera-box">
+                        <div class="camera-title">Weight Scale (Cam 10)</div>
+                        <div class="camera-feed">
+                            <img id="live-cam-9" src="/video_feed/9" alt="Weight Camera"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';">
+                            <div class="camera-overlay">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Notifications and Activities -->
+    <div class="modal-overlay" id="infoModal" onclick="closeModalOnOverlay(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">System Information</div>
+                <div class="modal-close" onclick="toggleModal()">✕</div>
+            </div>
+            <div class="modal-body">
+                <!-- Notification Center -->
+                <div class="modal-section">
+                    <div class="modal-section-title">Notification Center</div>
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="notification-item">
+                            <div class="notification-icon alert">⚠</div>
+                            <div class="notification-content">
+                                <div class="notification-text">Alert: Excessive speed detected in Zone 2</div>
+                                <div class="notification-time">2 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon alert">⚠</div>
+                            <div class="notification-content">
+                                <div class="notification-text">Alert: Plate LUM5 in run 1RD999</div>
+                                <div class="notification-time">15 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon info">👥</div>
+                            <div class="notification-content">
+                                <div class="notification-text">Daily report: Batch processing completed</div>
+                                <div class="notification-time">1 hour ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Log -->
+                <div class="modal-section">
+                    <div class="modal-section-title">Recent Activity Log</div>
+                    <div class="activity-list" id="activityList">
+                        <div class="activity-item">
+                            <div class="activity-dot blue"></div>
+                            <div class="activity-content">
+                                <div class="activity-text">Twin Batch 98-4422 Bay 3</div>
+                                <div class="activity-time">2 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot green"></div>
+                            <div class="activity-content">
+                                <div class="activity-text">Truck XZ-9890 verified and cleared</div>
+                                <div class="activity-time">8 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot yellow"></div>
+                            <div class="activity-content">
+                                <div class="activity-text">High throughput detected - Line 1</div>
+                                <div class="activity-time">15 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot blue"></div>
+                            <div class="activity-content">
+                                <div class="activity-text">Driver verification successful - Dwalone De</div>
+                                <div class="activity-time">22 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot green"></div>
+                            <div class="activity-content">
+                                <div class="activity-text">Bay 2 cleared and ready</div>
+                                <div class="activity-time">35 minutes ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate real-time updates
+        function addNotification(text, type = 'alert') {
+            const notificationsList = document.getElementById('notificationsList');
+            const notificationItem = document.createElement('div');
+            notificationItem.className = 'notification-item';
+            
+            const iconClass = type === 'alert' ? 'alert' : 'info';
+            const icon = type === 'alert' ? '⚠' : '👥';
+            
+            notificationItem.innerHTML = `
+                <div class="notification-icon ${iconClass}">${icon}</div>
+                <div class="notification-content">
+                    <div class="notification-text">${text}</div>
+                    <div class="notification-time">Just now</div>
+                </div>
+            `;
+            
+            notificationsList.insertBefore(notificationItem, notificationsList.firstChild);
+            
+            // Keep only last 10 notifications
+            while (notificationsList.children.length > 10) {
+                notificationsList.removeChild(notificationsList.lastChild);
+            }
+        }
+
+        function addActivity(text, type = 'blue') {
+            const activityList = document.getElementById('activityList');
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            
+            const dotColors = {
+                'blue': 'blue',
+                'green': 'green',
+                'yellow': 'yellow'
+            };
+            
+            activityItem.innerHTML = `
+                <div class="activity-dot ${dotColors[type]}"></div>
+                <div class="activity-content">
+                    <div class="activity-text">${text}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            
+            activityList.insertBefore(activityItem, activityList.firstChild);
+            
+            // Keep only last 10 activities
+            while (activityList.children.length > 10) {
+                activityList.removeChild(activityList.lastChild);
+            }
+        }
+
+        // Store interval IDs for cleanup
+        let timeUpdateInterval = null;
+        let activityUpdateInterval = null;
+
+        // Update notification and activity times
+        function startTimeUpdates() {
+            if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+            timeUpdateInterval = setInterval(() => {
+                const notifications = document.querySelectorAll('.notification-time');
+                const activities = document.querySelectorAll('.activity-time');
+                
+                [...notifications, ...activities].forEach((timeEl, index) => {
+                    const minutes = index + 2;
+                    if (minutes < 60) {
+                        timeEl.textContent = `${minutes} minutes ago`;
+                    } else {
+                        const hours = Math.floor(minutes / 60);
+                        timeEl.textContent = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                    }
+                });
+            }, 60000);
+        }
+
+        // Simulate periodic updates
+        function startActivityUpdates() {
+            if (activityUpdateInterval) clearInterval(activityUpdateInterval);
+            activityUpdateInterval = setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const activities = [
+                        'New truck detected at Bay 1',
+                        'Coconut count threshold reached',
+                        'Driver verification in progress',
+                        'System health check completed'
+                    ];
+                    const types = ['blue', 'green', 'yellow'];
+                    addActivity(activities[Math.floor(Math.random() * activities.length)], types[Math.floor(Math.random() * types.length)]);
+                }
+            }, 20000); // Increased from 15s to 20s for better performance
+        }
+
+        // Start updates on page load
+        startTimeUpdates();
+        startActivityUpdates();
+
+        // Pause updates when page is not visible (better performance)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Page is hidden - stop all intervals
+                if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+                if (activityUpdateInterval) clearInterval(activityUpdateInterval);
+            } else {
+                // Page is visible - restart updates
+                startTimeUpdates();
+                startActivityUpdates();
+            }
+        });
+
+        // Set active navigation based on current page
+        function setActiveNavigation() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                if (href === currentPath || (currentPath === '/' && href === '/')) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Initialize navigation on page load
+        document.addEventListener('DOMContentLoaded', setActiveNavigation);
+
+        // Modal toggle functions
+        function toggleModal() {
+            const modal = document.getElementById('infoModal');
+            modal.classList.toggle('active');
+        }
+
+        function closeModalOnOverlay(event) {
+            if (event.target === event.currentTarget) {
+                toggleModal();
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('infoModal');
+                if (modal.classList.contains('active')) {
+                    toggleModal();
+                }
+            }
+        });
+
+        // Clean up on page unload to prevent memory leaks and improve navigation speed
+        window.addEventListener('beforeunload', function() {
+            // Clear all intervals
+            if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+            if (activityUpdateInterval) clearInterval(activityUpdateInterval);
+            
+            // Stop camera feeds to free resources
+            const cameraImages = document.querySelectorAll('.camera-feed img');
+            cameraImages.forEach((img) => {
+                // Replace with placeholder to stop loading
+                img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3EUnloading...%3C/text%3E%3C/svg%3E';
+            });
+        });
+
+        var NO_SIGNAL_SVG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'600\'%3E%3Crect fill=\'%23000\' width=\'800\' height=\'600\'/%3E%3Ctext fill=\'%23fff\' font-family=\'Arial\' font-size=\'24\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3ENo Signal%3C/text%3E%3C/svg%3E';
+
+        // All 10 cameras load via direct src; retry on error so feeds recover after network/server blips
+        document.addEventListener('DOMContentLoaded', function() {
+            var cameraImages = document.querySelectorAll('.camera-feed img');
+            cameraImages.forEach(function(img) {
+                var errorCount = 0;
+                var maxRetries = 2;
+                var feedUrl = img.src && img.src.indexOf('video_feed') !== -1 ? img.src.split('?')[0] : null;
+                img.onerror = function() {
+                    errorCount++;
+                    if (errorCount <= maxRetries && !document.hidden && feedUrl) {
+                        setTimeout(function() {
+                            if (!document.hidden && feedUrl) {
+                                img.src = feedUrl + (feedUrl.indexOf('?') !== -1 ? '&' : '?') + 't=' + Date.now();
+                            }
+                        }, 3000);
+                    } else if (feedUrl) {
+                        img.onerror = null;
+                        img.src = NO_SIGNAL_SVG;
+                    }
+                };
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coconut Summary - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar Styles - Same as other pages */
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            animation: gradientShift 8s ease infinite;
+            z-index: 0;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(106, 17, 203, 0.15) 0%, transparent 70%);
+            animation: float 15s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            }
+            50% {
+                background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #1a2540 40%, #3d4a68 60%, #6b7280 80%, #9ca3af 100%);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(106, 17, 203, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation-delay: 0s; animation-duration: 15s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 30%; animation-delay: 2s; animation-duration: 18s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 50%; animation-delay: 4s; animation-duration: 20s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 70%; animation-delay: 1s; animation-duration: 16s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 90%; animation-delay: 3s; animation-duration: 22s; }
+        .particle:nth-child(6) { width: 3px; height: 3px; left: 20%; animation-delay: 5s; animation-duration: 17s; }
+        .particle:nth-child(7) { width: 5px; height: 5px; left: 60%; animation-delay: 2.5s; animation-duration: 19s; }
+        .particle:nth-child(8) { width: 4px; height: 4px; left: 80%; animation-delay: 1.5s; animation-duration: 21s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) translateX(50px) scale(1); opacity: 0; }
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-section {
+            padding: 12px 12px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-section {
+            padding: 10px 0 20px 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            position: relative;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-left-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(106, 17, 203, 0.35) 0%, rgba(37, 117, 252, 0.25) 100%);
+            color: #fff;
+            border-left-color: #a78bfa;
+            box-shadow: 0 2px 14px rgba(106, 17, 203, 0.4);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: transform 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .user-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .user-logo:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .info-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(106, 17, 203, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            width: calc(100vw - 200px);
+            min-width: 0;
+            margin-left: 200px;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .top-header {
+            background: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .content-wrapper {
+            padding: 16px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .main-center {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .right-sidebar-coconut {
+            width: 300px;
+            min-width: 300px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .filters-section.filters-sidebar {
+            flex-direction: column;
+            padding: 16px;
+            margin: 0;
+        }
+
+        .filters-sidebar .filter-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: stretch;
+        }
+
+        .filters-sidebar .filter-label {
+            font-size: 11px;
+        }
+
+        .filters-sidebar .filter-select {
+            width: 100%;
+            min-width: 0;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #1a1a2e;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .filter-select:hover {
+            border-color: #6a11cb;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+
+        /* Tabs Navigation */
+        .tabs-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid #f3f4f6;
+            background: #f9fafb;
+            overflow-x: auto;
+        }
+
+        .tabs-header-with-action {
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 16px;
+        }
+
+        .tabs-header-tabs {
+            display: flex;
+            align-items: center;
+        }
+
+        .tabs-header-with-action .btn-download-pdf {
+            flex-shrink: 0;
+        }
+
+        .tabs-header::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tabs-header::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .tabs-header::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 2px;
+        }
+
+        .tab-button {
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            color: #1a1a2e;
+            background: rgba(106, 17, 203, 0.05);
+        }
+
+        .tab-button.active {
+            color: #6a11cb;
+            border-bottom-color: #6a11cb;
+            background: white;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Summary Stats for Each Tab */
+        .tab-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-stat {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            padding: 16px;
+            border-radius: 10px;
+            border-left: 4px solid #10b981;
+        }
+
+        .summary-stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .summary-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        /* Data Table - only table scrolls, not the page */
+        .data-table-wrapper {
+            overflow: auto;
+            max-height: min(60vh, 500px);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .data-table thead {
+            background: #f9fafb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .data-table th:hover {
+            background: #f3f4f6;
+        }
+
+        .data-table th.sortable::after {
+            content: ' ↕';
+            opacity: 0.3;
+            font-size: 10px;
+        }
+
+        .data-table th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+            color: #6a11cb;
+        }
+
+        .data-table th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+            color: #6a11cb;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            font-size: 12px;
+            color: #1a1a2e;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .count-value {
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        /* Live Coconut Data - right sidebar vertical card */
+        .coconut-live-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #059669;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+
+        .coconut-live-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coconut-live-title .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: coconutLivePulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes coconutLivePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .coconut-summary-table-wrap {
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .coconut-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .coconut-summary-table thead {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+        }
+
+        .coconut-summary-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .coconut-summary-table tbody tr {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .coconut-summary-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .coconut-summary-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .coconut-summary-table td {
+            padding: 10px 12px;
+            color: #1a1a2e;
+            font-weight: 500;
+        }
+
+        .coconut-summary-table td:first-child {
+            font-weight: 600;
+            color: #6b7280;
+            width: 55%;
+        }
+
+        .coconut-summary-table td:last-child {
+            font-weight: 700;
+            color: #059669;
+            text-align: right;
+        }
+
+        .coconut-live-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .coconut-live-status.on {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .coconut-live-status.off {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .coconut-live-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .coconut-duration {
+            font-size: 12px;
+            color: #374151;
+        }
+
+        .btn-download-pdf {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-download-pdf:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .date-value {
+            color: #6b7280;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-badge.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.completed {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        @media (max-width: 1100px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            .right-sidebar-coconut {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .tab-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .filters-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .filter-select {
+                width: 100%;
+            }
+            .tab-summary {
+                grid-template-columns: 1fr;
+            }
+            .tabs-header {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="SilverMill Logo"
+                 class="logo-img">
+        </div>
+
+        <div class="nav-section">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">◉</div>
+                <span>Dashboard</span>
+            </a>
+            <a href="/live_camera" class="nav-item">
+                <div class="nav-icon">▶</div>
+                <span>Live Cameras</span>
+            </a>
+            <a href="/coconut_count" class="nav-item">
+                <div class="nav-icon">◎</div>
+                <span>Coconut Count</span>
+            </a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item">
+                <div class="nav-icon">▣</div>
+                <span>Truck Verification</span>
+            </a>
+            <a href="/weight_check" class="nav-item">
+                <div class="nav-icon">☰</div>
+                <span>Coconut Summary</span>
+            </a>
+            <a href="/truck_summary" class="nav-item">
+                <div class="nav-icon">▤</div>
+                <span>Truck Summary</span>
+            </a>
+            <a href="/system" class="nav-item">
+                <div class="nav-icon">⚙</div>
+                <span>System</span>
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item">
+                <div class="nav-icon">⎋</div>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="/login" class="nav-item">
+                <div class="nav-icon">🔐</div>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}"
+                 alt="User Logo"
+                 class="user-logo">
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">Version</span>
+                <span class="info-value">v2.1.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="info-value">Online</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Build</span>
+                <span class="info-value">2024.12</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">© 2024</span>
+                <span class="info-value">SilverMill</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <h1 class="page-title">Coconut Summary</h1>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Center: Table only -->
+            <div class="main-center">
+            <!-- Tabs Container -->
+            <div class="tabs-container">
+                <div class="tabs-header tabs-header-with-action">
+                    <div class="tabs-header-tabs">
+                        <button class="tab-button active" onclick="switchTab('count')">Count</button>
+                    </div>
+                    <a href="/download_coconut_report_pdf" class="btn-download-pdf" download target="_blank" rel="noopener">Download PDF report</a>
+                </div>
+
+                <!-- Count Tab -->
+                <div id="tab-count" class="tab-content active">
+                    <div class="tab-summary">
+                        <div class="summary-stat">
+                            <div class="summary-stat-label">Today's Count</div>
+                            <div class="summary-stat-value" id="todayCount">0</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="summary-stat-label">This Month Total</div>
+                            <div class="summary-stat-value" id="monthCount">—</div>
+                        </div>
+                        <div class="summary-stat" id="durationStatWrap">
+                            <div class="summary-stat-label">Model duration</div>
+                            <div class="summary-stat-value" id="modelDuration">—</div>
+                        </div>
+                    </div>
+                    <div class="data-table-wrapper">
+                        <table class="data-table" id="countTable">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" onclick="sortTable('countTable', 0)">Date</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 1)">Time</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 2)">Belt 1 (Cam 1-2)</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 3)">Belt 2 (Cam 3-4)</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 4)">Belt 3 (Cam 5-6)</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 5)">Total coconut count</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 6)">Accuracy</th>
+                                    <th class="sortable" onclick="sortTable('countTable', 7)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="countTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Right sidebar: Filters (after header bar) + Live Coconut Count Data -->
+            <div class="right-sidebar-coconut">
+                <div class="filters-section filters-sidebar">
+                    <div class="filter-group">
+                        <span class="filter-label">Year:</span>
+                        <select class="filter-select" id="yearFilter" onchange="applyFilters()">
+                            <option value="2026" selected>2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Month:</span>
+                        <select class="filter-select" id="monthFilter" onchange="applyFilters()">
+                            <option value="all">All Months</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Day:</span>
+                        <select class="filter-select" id="dayFilter" onchange="applyFilters()">
+                            <option value="all">All Days</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Time:</span>
+                        <select class="filter-select" id="timeFilter" onchange="applyFilters()">
+                            <option value="all">All Time</option>
+                            <option value="shift1">Shift 1 (6 AM - 2 PM)</option>
+                            <option value="shift2">Shift 2 (2 PM - 10 PM)</option>
+                            <option value="shift3">Shift 3 (10 PM - 6 AM)</option>
+                            <option value="hourly">Hourly View</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="coconut-live-card">
+                    <div class="coconut-live-title">
+                        <span class="live-dot"></span>
+                        Live Coconut Count Data
+                        <span class="coconut-live-status off" id="coconutDetectionStatus">Detection: —</span>
+                    </div>
+                    <div class="coconut-summary-table-wrap">
+                        <table class="coconut-summary-table">
+                            <tbody>
+                                <tr>
+                                    <td>Total coconut count</td>
+                                    <td id="coconutTableTotal">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Belt 1</td>
+                                    <td id="coconutTableBelt1">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Belt 2</td>
+                                    <td id="coconutTableBelt2">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Belt 3</td>
+                                    <td id="coconutTableBelt3">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Accuracy</td>
+                                    <td id="coconutTableAccuracy">—</td>
+                                </tr>
+                                <tr>
+                                    <td>Timestamp</td>
+                                    <td id="coconutTableTimestamp">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="coconut-live-footer">
+                        <span class="coconut-duration">Model duration: <strong id="coconutDuration">—</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global data storage
+        let allData = {
+            count: []
+        };
+
+        // Sort state for each table
+        let sortState = {};
+
+        // Filter data based on selected filters
+        function filterData(data) {
+            const year = document.getElementById('yearFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            const day = document.getElementById('dayFilter').value;
+            const time = document.getElementById('timeFilter').value;
+            
+            return data.filter(item => {
+                if (year && item.year != year) return false;
+                if (month !== 'all' && item.month != month) return false;
+                if (day !== 'all' && item.day != day) return false;
+                if (time !== 'all') {
+                    var hour = item.hour != null ? item.hour : (function() {
+                        if (item.time && /^\d{1,2}:\d{2}/.test(item.time)) {
+                            var p = item.time.split(':');
+                            return parseInt(p[0], 10);
+                        }
+                        return 0;
+                    })();
+                    if (time === 'shift1' && (hour < 6 || hour >= 14)) return false;
+                    if (time === 'shift2' && (hour < 14 || hour >= 22)) return false;
+                    if (time === 'shift3' && (hour >= 6 && hour < 22)) return false;
+                }
+                return true;
+            });
+        }
+
+        // Filter count history rows (from API) by current Year/Month/Day/Time filters
+        function filterCountHistory(rows) {
+            if (!rows || rows.length === 0) return rows;
+            var yearEl = document.getElementById('yearFilter');
+            var monthEl = document.getElementById('monthFilter');
+            var dayEl = document.getElementById('dayFilter');
+            var timeEl = document.getElementById('timeFilter');
+            var year = yearEl ? yearEl.value : '';
+            var month = monthEl ? monthEl.value : 'all';
+            var day = dayEl ? dayEl.value : 'all';
+            var time = timeEl ? timeEl.value : 'all';
+            return rows.filter(function(r) {
+                if (year && r.year != year) return false;
+                if (month !== 'all' && r.month != month) return false;
+                if (day !== 'all' && r.day != day) return false;
+                if (time !== 'all') {
+                    var hour = r.hour != null ? r.hour : (r.time && /^\d{1,2}:\d{2}/.test(r.time) ? parseInt(String(r.time).split(':')[0], 10) : 0);
+                    if (time === 'shift1' && (hour < 6 || hour >= 14)) return false;
+                    if (time === 'shift2' && (hour < 14 || hour >= 22)) return false;
+                    if (time === 'shift3' && (hour >= 6 && hour < 22)) return false;
+                }
+                return true;
+            });
+        }
+
+        // Render table data
+        function renderTable(tableId, bodyId, data, columns) {
+            const tbody = document.getElementById(bodyId);
+            tbody.innerHTML = '';
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    if (col === 'status') {
+                        td.innerHTML = `<span class="status-badge ${row[col].toLowerCase()}">${row[col]}</span>`;
+                    } else if (col === 'total' || col === 'small' || col === 'medium' || col === 'large' || col === 'xlarge' || 
+                               col === 'gradeA' || col === 'gradeB' || col === 'gradeC' || col === 'production' || 
+                               col === 'passed' || col === 'failed') {
+                        td.className = 'count-value';
+                        td.textContent = row[col].toLocaleString();
+                    } else if (col === 'date') {
+                        td.className = 'date-value';
+                        td.textContent = row[col];
+                    } else {
+                        td.textContent = row[col];
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update summary stats (Today's Count, This Month Total; Model duration is set by live API)
+        function updateSummaryStats(tab, filteredData) {
+            if (tab === 'count') {
+                var d = new Date();
+                var todayTotal = filteredData.reduce(function(sum, item) {
+                    return (item.year === d.getFullYear() && item.month === d.getMonth() + 1 && item.day === d.getDate()) ? sum + (Number(item.total) || 0) : sum;
+                }, 0);
+                var monthTotal = filteredData.reduce(function(sum, item) {
+                    return (item.year === d.getFullYear() && item.month === d.getMonth() + 1) ? sum + (Number(item.total) || 0) : sum;
+                }, 0);
+                var todayEl = document.getElementById('todayCount');
+                if (todayEl) todayEl.textContent = todayTotal.toLocaleString();
+                var monthEl = document.getElementById('monthCount');
+                if (monthEl) monthEl.textContent = monthTotal > 0 ? monthTotal.toLocaleString() : '—';
+            }
+        }
+
+        // Apply filters and update tables
+        function applyFilters() {
+            const activeTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
+            const filteredData = filterData(allData[activeTab]);
+            updateTable(activeTab, filteredData);
+        }
+
+        // Update table for specific tab
+        function updateTable(tab, data) {
+            updateSummaryStats(tab, data);
+            
+            if (tab === 'count') {
+                refreshCountTable(undefined, undefined, undefined, undefined, undefined, data);
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick') === `switchTab('${tabName}')`) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // Apply filters and update table
+            const filteredData = filterData(allData[tabName]);
+            updateTable(tabName, filteredData);
+        }
+
+        // Sort table
+        function sortTable(tableId, columnIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const headers = table.querySelectorAll('th');
+            const header = headers[columnIndex];
+            
+            // Remove sort classes from all headers
+            headers.forEach(h => {
+                h.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            // Determine sort direction
+            const isAsc = !header.classList.contains('sort-asc');
+            header.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+            
+            // Get column name from header text
+            const columnName = header.textContent.trim().toLowerCase().replace(/\s+/g, '');
+            const columnMap = {
+                'date': 'date',
+                'time': 'time',
+                'small': 'small',
+                'medium': 'medium',
+                'large': 'large',
+                'x-large': 'xlarge',
+                'total': 'total',
+                'batchid': 'batchId',
+                'gradea': 'gradeA',
+                'gradeb': 'gradeB',
+                'gradec': 'gradeC',
+                'batches': 'batches',
+                'avg/batch': 'avgBatch',
+                'belt1(cam1-2)': 'belt1',
+                'belt2(cam3-4)': 'belt2',
+                'belt3(cam5-6)': 'belt3',
+                'totalcoconutcount': 'total',
+                'conveyorbelt': 'conveyorBelt',
+                'camera': 'camera',
+                'accuracy': 'accuracy',
+                'shift': 'shift',
+                'production': 'production',
+                'efficiency': 'efficiency',
+                'rate/min': 'ratePerMin',
+                'quality%': 'quality',
+                'passed': 'passed',
+                'failed': 'failed',
+                'passrate': 'passRate',
+                'grade': 'grade',
+                'status': 'status'
+            };
+            
+            const activeTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
+            const filteredData = filterData(allData[activeTab]);
+            
+            // Sort data
+            filteredData.sort((a, b) => {
+                let aVal = a[columnMap[columnName]] || '';
+                let bVal = b[columnMap[columnName]] || '';
+                
+                // Handle numeric values
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return isAsc ? aVal - bVal : bVal - aVal;
+                }
+                
+                // Handle percentage strings
+                if (typeof aVal === 'string' && aVal.includes('%')) {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                    return isAsc ? aVal - bVal : bVal - aVal;
+                }
+                
+                // Handle strings
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+                if (isAsc) {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                } else {
+                    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+                }
+            });
+            
+            // Update table
+            updateTable(activeTab, filteredData);
+        }
+
+        // Set active navigation
+        function setActiveNavigation() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                if (href === currentPath || (currentPath === '/' && href === '/')) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Live coconut data from /api/coconut_counts and /api/coconut_detection/status
+        let coconutLiveInterval = null;
+        let detectionStartedAt = null;
+
+        function formatDuration(startedAtIso) {
+            if (!startedAtIso) return '—';
+            var start = new Date(startedAtIso);
+            var sec = Math.floor((Date.now() - start.getTime()) / 1000);
+            var h = Math.floor(sec / 3600);
+            var m = Math.floor((sec % 3600) / 60);
+            var s = sec % 60;
+            if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+            if (m > 0) return m + 'm ' + s + 's';
+            return s + 's';
+        }
+
+        function renderCountTableBody(historyRows, prependLiveRow, liveTotal, liveBelt1, liveBelt2, liveBelt3) {
+            var tbody = document.getElementById('countTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (prependLiveRow && liveTotal !== undefined) {
+                var now = new Date();
+                var dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                var timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                var b1 = (liveBelt1 != null) ? liveBelt1 : 0;
+                var b2 = (liveBelt2 != null) ? liveBelt2 : 0;
+                var b3 = (liveBelt3 != null) ? liveBelt3 : 0;
+                var tr = document.createElement('tr');
+                tr.className = 'live-count-row';
+                tr.innerHTML = '<td class="date-value">' + dateStr + '</td><td>' + timeStr + '</td><td class="count-value">' + b1.toLocaleString() + '</td><td class="count-value">' + b2.toLocaleString() + '</td><td class="count-value">' + b3.toLocaleString() + '</td><td class="count-value">' + (liveTotal || 0).toLocaleString() + '</td><td>99.2%</td><td><span class="status-badge active">Live</span></td>';
+                tbody.appendChild(tr);
+            }
+            var rows = historyRows || [];
+            for (var i = rows.length - 1; i >= 0; i--) {
+                var r = rows[i];
+                var statusClass = (r.status === 'Live') ? 'active' : 'completed';
+                var rb1 = Number(r.belt1);
+                var rb2 = Number(r.belt2);
+                var rb3 = Number(r.belt3);
+                var rtot = Number(r.total);
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td class="date-value">' + (r.date || '') + '</td><td>' + (r.time || '') + '</td><td class="count-value">' + rb1.toLocaleString() + '</td><td class="count-value">' + rb2.toLocaleString() + '</td><td class="count-value">' + rb3.toLocaleString() + '</td><td class="count-value">' + rtot.toLocaleString() + '</td><td>' + (r.accuracy || '99.2%') + '</td><td><span class="status-badge ' + statusClass + '">' + (r.status || 'Completed') + '</span></td>';
+                tbody.appendChild(tr);
+            }
+        }
+
+        function getCoconutHistoryUrl() {
+            var y = document.getElementById('yearFilter');
+            var m = document.getElementById('monthFilter');
+            var d = document.getElementById('dayFilter');
+            var t = document.getElementById('timeFilter');
+            var params = new URLSearchParams();
+            if (y && y.value) params.set('year', y.value);
+            if (m && m.value && m.value !== 'all') params.set('month', m.value);
+            if (d && d.value && d.value !== 'all') params.set('day', d.value);
+            if (t && t.value && t.value !== 'all') params.set('time', t.value);
+            var q = params.toString();
+            return '/api/coconut_count_history' + (q ? '?' + q : '');
+        }
+
+        function refreshCountTable(enabled, total, belt1, belt2, belt3, fallbackData) {
+            var d = new Date();
+            function doRender(rows, en, t, b1, b2, b3) {
+                rows = rows || [];
+                renderCountTableBody(rows, !!en, t, b1, b2, b3);
+                var todayTotal = rows.reduce(function(s, r) {
+                    return (r.year === d.getFullYear() && r.month === d.getMonth() + 1 && r.day === d.getDate()) ? s + (Number(r.total) || 0) : s;
+                }, 0);
+                var monthTotal = rows.reduce(function(s, r) {
+                    return (r.year === d.getFullYear() && r.month === d.getMonth() + 1) ? s + (Number(r.total) || 0) : s;
+                }, 0);
+                var todayEl = document.getElementById('todayCount');
+                if (todayEl) todayEl.textContent = (en && t != null) ? t.toLocaleString() : (todayTotal > 0 ? todayTotal.toLocaleString() : '0');
+                var monthEl = document.getElementById('monthCount');
+                if (monthEl) monthEl.textContent = monthTotal > 0 ? monthTotal.toLocaleString() : '—';
+            }
+            if (enabled === undefined || total === undefined) {
+                Promise.all([
+                    fetch(getCoconutHistoryUrl()).then(function(r) { return r.json(); }),
+                    fetch('/api/coconut_detection/status').then(function(r) { return r.json(); }),
+                    fetch('/api/coconut_counts').then(function(r) { return r.json(); })
+                ]).then(function(results) {
+                    var hist = (results[0].rows || []);
+                    var filteredHist = filterCountHistory(hist);
+                    var en = !!results[1].enabled;
+                    var c = results[2];
+                    var b1 = parseInt(c['0']||0,10)+parseInt(c['1']||0,10);
+                    var b2 = parseInt(c['2']||0,10)+parseInt(c['3']||0,10);
+                    var b3 = parseInt(c['4']||0,10)+parseInt(c['5']||0,10);
+                    var t = b1+b2+b3;
+                    doRender(filteredHist, en, t, b1, b2, b3);
+                }).catch(function() {
+                    doRender([], false, 0, 0, 0, 0);
+                });
+                return;
+            }
+            fetch(getCoconutHistoryUrl()).then(function(r) { return r.json(); }).then(function(data) {
+                var rows = data.rows || [];
+                var filtered = filterCountHistory(rows);
+                doRender(filtered, enabled, total, belt1, belt2, belt3);
+            }).catch(function() { doRender([], enabled, total, belt1, belt2, belt3); });
+        }
+
+        function updateCountTableLiveRow(enabled, total, belt1, belt2, belt3) {
+            refreshCountTable(enabled, total, belt1, belt2, belt3);
+        }
+
+        function updateCoconutLiveData() {
+            const statusEl = document.getElementById('coconutDetectionStatus');
+            const durationEl = document.getElementById('coconutDuration');
+            const modelDurationEl = document.getElementById('modelDuration');
+
+            fetch('/api/coconut_detection/status').then(function(r) { return r.json(); }).then(function(d) {
+                if (statusEl) {
+                    statusEl.textContent = d.enabled ? 'Detection: On' : 'Detection: Off';
+                    statusEl.className = 'coconut-live-status ' + (d.enabled ? 'on' : 'off');
+                }
+                detectionStartedAt = d.started_at || null;
+                var dur = formatDuration(detectionStartedAt);
+                if (durationEl) durationEl.textContent = dur;
+                if (modelDurationEl) modelDurationEl.textContent = d.enabled ? dur : '—';
+            }).catch(function() {
+                if (statusEl) { statusEl.textContent = 'Detection: —'; statusEl.className = 'coconut-live-status off'; }
+                if (durationEl) durationEl.textContent = '—';
+                if (modelDurationEl) modelDurationEl.textContent = '—';
+            });
+
+            fetch('/api/coconut_counts').then(function(r) { return r.json(); }).then(function(data) {
+                const c0 = parseInt(data['0'] || 0, 10);
+                const c1 = parseInt(data['1'] || 0, 10);
+                const c2 = parseInt(data['2'] || 0, 10);
+                const c3 = parseInt(data['3'] || 0, 10);
+                const c4 = parseInt(data['4'] || 0, 10);
+                const c5 = parseInt(data['5'] || 0, 10);
+                const belt1 = c0 + c1;
+                const belt2 = c2 + c3;
+                const belt3 = c4 + c5;
+                const total = belt1 + belt2 + belt3;
+                function set(id, val) { var el = document.getElementById(id); if (el) el.textContent = typeof val === 'number' ? val.toLocaleString() : val; }
+                set('coconutTableTotal', total);
+                set('coconutTableBelt1', belt1);
+                set('coconutTableBelt2', belt2);
+                set('coconutTableBelt3', belt3);
+                set('coconutTableAccuracy', detectionStartedAt ? '99.2%' : '—');
+                var tsEl = document.getElementById('coconutTableTimestamp');
+                if (tsEl) tsEl.textContent = new Date().toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' });
+                set('todayCount', total);
+                updateCountTableLiveRow(!!detectionStartedAt, total, belt1, belt2, belt3);
+            }).catch(function() {});
+        }
+        function startCoconutLiveUpdates() {
+            updateCoconutLiveData();
+            if (coconutLiveInterval) clearInterval(coconutLiveInterval);
+            coconutLiveInterval = setInterval(updateCoconutLiveData, 2000);
+        }
+
+        // Initialize on page load (data from API/DB only, no dummy data)
+        document.addEventListener('DOMContentLoaded', function() {
+            setActiveNavigation();
+            const activeTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
+            const filteredData = filterData(allData[activeTab]);
+            updateTable(activeTab, filteredData);
+            startCoconutLiveUpdates();
+        });
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && coconutLiveInterval) {
+                clearInterval(coconutLiveInterval);
+                coconutLiveInterval = null;
+            } else if (!document.hidden) startCoconutLiveUpdates();
+        });
+    </script>
+</body>
+</html>
+

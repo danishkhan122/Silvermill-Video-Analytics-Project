@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Truck Summary - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 20%, #16213e 40%, #4a5568 60%, #6b7280 80%, #9ca3af 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+        }
+
+        .sidebar > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-section {
+            padding: 12px 12px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-section {
+            padding: 10px 0 20px 0;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            position: relative;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-left-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(2px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(106, 17, 203, 0.35) 0%, rgba(37, 117, 252, 0.25) 100%);
+            color: #fff;
+            border-left-color: #a78bfa;
+            box-shadow: 0 2px 14px rgba(106, 17, 203, 0.4);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: transform 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .nav-item:hover .nav-icon,
+        .nav-item.active .nav-icon {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .user-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .info-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(106, 17, 203, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 200px;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .top-header {
+            background: #ffffff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 17, 203, 0.4);
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-btn.excel {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .download-btn.excel:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .download-btn.pdf {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .download-btn.pdf:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Filter bar (visible on page: month, date, time) */
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .filter-bar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+        .filter-bar-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 16px;
+        }
+        .filter-bar-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+        .filter-bar-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+        .filter-bar-select,
+        .filter-bar-input {
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background: #fff;
+        }
+        .filter-bar-select {
+            min-width: 140px;
+        }
+        .filter-bar-input[type="date"],
+        .filter-bar-input[type="time"] {
+            min-width: 130px;
+        }
+        .filter-bar-input[type="text"] {
+            min-width: 140px;
+        }
+        .filter-bar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .filter-bar-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .filter-bar-btn.apply {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+        }
+        .filter-bar-btn.apply:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        }
+        .filter-bar-btn.clear {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .filter-bar-btn.clear:hover {
+            background: #e5e7eb;
+        }
+        @media (max-width: 900px) {
+            .filter-bar-row { flex-direction: column; align-items: stretch; }
+            .filter-bar-item { min-width: 0; }
+        }
+
+        /* Filter Drawer */
+        .filter-drawer {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .filter-drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+
+        .drawer-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .drawer-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .drawer-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .drawer-content {
+            padding: 24px;
+        }
+
+        .filter-group {
+            margin-bottom: 24px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 17, 203, 0.4);
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            background: #f3f4f6;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            padding: 24px;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid;
+        }
+
+        .summary-card.plates {
+            border-left-color: #6a11cb;
+        }
+
+        .summary-card.drivers {
+            border-left-color: #2575fc;
+        }
+
+        .summary-card.weight {
+            border-left-color: #10b981;
+        }
+
+        .summary-card.trucks {
+            border-left-color: #f59e0b;
+        }
+
+        .card-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .table-wrapper table {
+            min-width: 1000px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        thead {
+            background: #f9fafb;
+        }
+
+        th {
+            padding: 16px 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        th:first-child {
+            width: 50px;
+            text-align: center;
+        }
+
+        th:nth-child(2) {
+            width: 140px;
+            text-align: left;
+        }
+
+        th:nth-child(3) {
+            width: 160px;
+            text-align: center;
+        }
+
+        th:nth-child(4) {
+            width: 160px;
+            text-align: center;
+        }
+
+        th:nth-child(5) {
+            width: 120px;
+            text-align: right;
+        }
+
+        th:nth-child(6) {
+            width: 120px;
+            text-align: left;
+        }
+
+        th:nth-child(7) {
+            width: 110px;
+            text-align: left;
+        }
+
+        th:last-child {
+            width: 110px;
+            text-align: center;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #1a1a2e;
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-weight: 600;
+            color: #6b7280;
+            padding: 12px 8px;
+        }
+
+        td:nth-child(2) {
+            text-align: left;
+            padding: 12px;
+            width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        td:nth-child(3),
+        td:nth-child(4) {
+            text-align: center;
+            padding: 8px;
+            width: 160px;
+            overflow: hidden;
+        }
+
+        td:nth-child(5) {
+            text-align: right;
+            padding: 12px;
+        }
+
+        td:nth-child(6),
+        td:nth-child(7) {
+            text-align: left;
+            padding: 12px;
+        }
+
+        td:last-child {
+            text-align: center;
+            padding: 12px;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .image-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 140px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: block;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.05);
+            border-color: #6a11cb;
+            box-shadow: 0 4px 8px rgba(106, 17, 203, 0.3);
+        }
+
+        .plate-number {
+            font-weight: 600;
+            color: #6a11cb;
+            font-size: 14px;
+        }
+
+        .weight-value {
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Modal for Image View */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: white;
+            border: none;
+            color: #1a1a2e;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .no-data-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .no-data-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Latest truck verification (LNPR) – driver image, number plate, recent plates */
+        .lnpr-summary-section {
+            margin-bottom: 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .lnpr-summary-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .lnpr-summary-body {
+            padding: 20px 24px;
+        }
+        /* 4 in a row: driver face, front plate, back plate, weight machine */
+        .snap-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .snap-grid-cell {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .snap-grid-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+        .snap-grid-img-wrap {
+            width: 100%;
+            height: 0;
+            padding-bottom: 70%;
+            background: #111;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .snap-grid-img-wrap img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        @media (max-width: 900px) {
+            .snap-grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 500px) {
+            .snap-grid-4 { grid-template-columns: 1fr; }
+        }
+        .lnpr-card {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+        }
+        .lnpr-card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+        .lnpr-img-wrap {
+            width: 100%;
+            max-height: 160px;
+            background: #111;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lnpr-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .lnpr-badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .lnpr-meta {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .lnpr-plate-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-top: 4px;
+        }
+        .lnpr-recent-section {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .lnpr-recent-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+        .lnpr-recent-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .lnpr-recent-item {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+        }
+        .lnpr-recent-plate {
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .lnpr-recent-cam {
+            font-size: 10px;
+            color: #6b7280;
+        }
+        .lnpr-empty {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1400px) {
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-drawer {
+                width: 100%;
+                right: -100%;
+            }
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            .table-wrapper {
+                overflow-x: scroll;
+            }
+            .header-actions {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .filter-toggle-btn,
+            .download-btn {
+                font-size: 11px;
+                padding: 8px 12px;
+            }
+            .download-btn span:last-child {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="SilverMill Logo"
+                 class="logo-img">
+        </div>
+
+        <div class="nav-section">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">◉</div>
+                <span>Dashboard</span>
+            </a>
+            <a href="/live_camera" class="nav-item">
+                <div class="nav-icon">▶</div>
+                <span>Live Cameras</span>
+            </a>
+            <a href="/coconut_count" class="nav-item">
+                <div class="nav-icon">◎</div>
+                <span>Coconut Count</span>
+            </a>
+            <a href="/truck_lnpr_driver_snap" class="nav-item">
+                <div class="nav-icon">▣</div>
+                <span>Truck Verification</span>
+            </a>
+            <a href="/weight_check" class="nav-item">
+                <div class="nav-icon">☰</div>
+                <span>Coconut Summary</span>
+            </a>
+            <a href="/truck_summary" class="nav-item active">
+                <div class="nav-icon">▤</div>
+                <span>Truck Summary</span>
+            </a>
+            <a href="/system" class="nav-item">
+                <div class="nav-icon">⚙</div>
+                <span>System</span>
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="/logout" class="nav-item">
+                <div class="nav-icon">⎋</div>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="/login" class="nav-item">
+                <div class="nav-icon">🔐</div>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="user-section">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}"
+                 alt="User Logo"
+                 class="user-logo">
+        </div>
+
+        <div class="info-section">
+            <div class="info-item">
+                <span>Version</span>
+                <span class="info-value">v2.1.0</span>
+            </div>
+            <div class="info-item">
+                <span>Status</span>
+                <span class="info-value">Online</span>
+            </div>
+            <div class="info-item">
+                <span>Build</span>
+                <span class="info-value">2024.12</span>
+            </div>
+            <div class="info-item">
+                <span>© 2024</span>
+                <span class="info-value">SilverMill</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <div class="header-title">Truck Summary & Analytics</div>
+            <div class="header-actions">
+                <button class="download-btn excel" onclick="downloadExcel()" id="excelBtn">
+                    <span>📊</span>
+                    <span>Download Excel</span>
+                </button>
+                <button class="download-btn pdf" onclick="downloadPDF()" id="pdfBtn">
+                    <span>📄</span>
+                    <span>Download PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card plates">
+                    <div class="card-label">Total Number Plates</div>
+                    <div class="card-value" id="totalPlates">—</div>
+                </div>
+                <div class="summary-card drivers">
+                    <div class="card-label">Driver Snaps</div>
+                    <div class="card-value" id="totalDrivers">—</div>
+                </div>
+                <div class="summary-card weight">
+                    <div class="card-label">Total Weight (kg)</div>
+                    <div class="card-value" id="totalWeight">—</div>
+                </div>
+                <div class="summary-card trucks">
+                    <div class="card-label">Trucks Processed</div>
+                    <div class="card-value" id="totalTrucks">—</div>
+                </div>
+            </div>
+
+            <!-- Latest truck verification – 4-grid: driver face, front plate, back plate, weight machine -->
+            <div class="lnpr-summary-section">
+                <div class="lnpr-summary-header">Latest truck verification (from Driver Face Capture page)</div>
+                <div class="lnpr-summary-body">
+                    <div class="snap-grid-4">
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Driver face</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="summaryDriverSnapImg" src="/api/truck/driver_snap" alt="Latest driver capture" />
+                            </div>
+                        </div>
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Front number plate</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="summaryPlateFrontImg" src="/api/truck/plate_snap/6" alt="Latest front plate" />
+                            </div>
+                        </div>
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Back number plate</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="summaryPlateBackImg" src="/api/truck/plate_snap/7" alt="Latest back plate" />
+                            </div>
+                        </div>
+                        <div class="snap-grid-cell">
+                            <div class="snap-grid-label">Weight machine</div>
+                            <div class="snap-grid-img-wrap">
+                                <img id="summaryWeightSnapImg" src="/api/truck/weight_snap" alt="Latest weight camera" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lnpr-recent-section">
+                    <div class="lnpr-recent-title">Recent number plates</div>
+                    <div class="lnpr-recent-list" id="summaryRecentPlatesList">
+                        <span class="lnpr-empty">No plates detected yet.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter bar: Month, Date, Time range (always visible) -->
+            <div class="filter-bar">
+                <div class="filter-bar-title">Filter records</div>
+                <div class="filter-bar-row">
+                    <div class="filter-bar-item">
+                        <label class="filter-bar-label">Month</label>
+                        <select class="filter-bar-select" id="filterMonth">
+                            <option value="">All Months</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="filter-bar-item">
+                        <label class="filter-bar-label">Date</label>
+                        <input type="date" class="filter-bar-input" id="filterDay">
+                    </div>
+                    <div class="filter-bar-item">
+                        <label class="filter-bar-label">Time from</label>
+                        <input type="time" class="filter-bar-input" id="filterTimeStart">
+                    </div>
+                    <div class="filter-bar-item">
+                        <label class="filter-bar-label">Time to</label>
+                        <input type="time" class="filter-bar-input" id="filterTimeEnd">
+                    </div>
+                    <div class="filter-bar-item">
+                        <label class="filter-bar-label">Number plate</label>
+                        <input type="text" class="filter-bar-input" id="filterPlate" placeholder="Search plate">
+                    </div>
+                    <div class="filter-bar-actions">
+                        <button type="button" class="filter-bar-btn apply" onclick="applyFilters()">Apply</button>
+                        <button type="button" class="filter-bar-btn clear" onclick="clearFilters()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container">
+                <div class="table-header">
+                    <div class="table-title">Truck Records</div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="truckTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Number Plate</th>
+                                <th>Plate Image</th>
+                                <th>Driver Snap</th>
+                                <th>Weight (kg)</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="truckTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeImageModal()">×</button>
+            <img class="modal-image" id="modalImage" src="" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        // Data from database (truck_verification_images)
+        let truckData = [];
+        let filteredData = [];
+        var NO_IMAGE_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="60"%3E%3Crect fill="%23e5e7eb" width="120" height="60"/%3E%3Ctext fill="%236b7280" x="60" y="35" text-anchor="middle" font-size="11"%3ENo image%3C/text%3E%3C/svg%3E';
+
+        function loadTruckSummaryFromApi() {
+            fetch('/api/truck/verification_summary')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    document.getElementById('totalPlates').textContent = (data.total_plates_processed != null) ? Number(data.total_plates_processed).toLocaleString() : '—';
+                    document.getElementById('totalDrivers').textContent = (data.total_driver_snaps != null) ? Number(data.total_driver_snaps).toLocaleString() : '—';
+                    document.getElementById('totalTrucks').textContent = (data.total_trucks != null) ? Number(data.total_trucks).toLocaleString() : '—';
+                    document.getElementById('totalWeight').textContent = (data.total_weight != null && data.total_weight !== '') ? Number(data.total_weight).toLocaleString() : '—';
+                })
+                .catch(function() {
+                    document.getElementById('totalPlates').textContent = '—';
+                    document.getElementById('totalDrivers').textContent = '—';
+                    document.getElementById('totalTrucks').textContent = '—';
+                    document.getElementById('totalWeight').textContent = '—';
+                });
+            fetch('/api/truck/verification_records?limit=200')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    const records = data.records || [];
+                    truckData = records.map(function(r, idx) {
+                        const plateNumber = r.plate_front_text || r.plate_back_text || '—';
+                        const plateImage = (r.plate_front_id || r.plate_back_id) ? ('/api/truck/verification_image/' + (r.plate_front_id || r.plate_back_id)) : NO_IMAGE_PLACEHOLDER;
+                        const driverImage = r.driver_snap_id ? ('/api/truck/verification_image/' + r.driver_snap_id) : NO_IMAGE_PLACEHOLDER;
+                        const dt = r.created_at ? new Date(r.created_at) : null;
+                        const date = dt ? dt.toISOString().slice(0, 10) : '—';
+                        const time = dt ? dt.toTimeString().slice(0, 8) : '—';
+                        return {
+                            id: idx + 1,
+                            plateNumber: plateNumber,
+                            plateImage: plateImage,
+                            driverImage: driverImage,
+                            weight: null,
+                            date: date,
+                            time: time,
+                            status: 'completed'
+                        };
+                    });
+                    filteredData = truckData.slice();
+                    renderTable(filteredData);
+                })
+                .catch(function() {
+                    truckData = [];
+                    filteredData = [];
+                    renderTable([]);
+                });
+        }
+
+        // Initialize page
+        function initPage() {
+            loadTruckSummaryFromApi();
+            refreshLnprSummary();
+            setInterval(refreshLnprSummary, 3000);
+            setInterval(loadTruckSummaryFromApi, 15000);
+        }
+
+        // Refresh LNPR summary (4-grid: driver, front plate, back plate, weight + recent plates) from APIs
+        function refreshLnprSummary() {
+            if (document.hidden) return;
+            const t = Date.now();
+            const driverImg = document.getElementById('summaryDriverSnapImg');
+            const plateFrontImg = document.getElementById('summaryPlateFrontImg');
+            const plateBackImg = document.getElementById('summaryPlateBackImg');
+            const weightImg = document.getElementById('summaryWeightSnapImg');
+            if (driverImg) driverImg.src = '/api/truck/driver_snap?' + t;
+            if (plateFrontImg) plateFrontImg.src = '/api/truck/plate_snap/6?' + t;
+            if (plateBackImg) plateBackImg.src = '/api/truck/plate_snap/7?' + (t + 1);
+            if (weightImg) weightImg.src = '/api/truck/weight_snap?' + (t + 2);
+            fetch('/api/truck/driver_snap_info').then(r => r.json()).then(function(data) {
+                const badge = document.getElementById('summaryDriverBadge');
+                const timeEl = document.getElementById('summaryDriverTime');
+                if (data.captured && data.captured_at) {
+                    if (badge) { badge.style.display = 'inline-block'; }
+                    if (timeEl) {
+                        const d = new Date(data.captured_at);
+                        timeEl.textContent = 'Captured at ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    }
+                    currentSessionData.hasDriver = true;
+                    currentSessionData.driverCapturedAt = data.captured_at;
+                } else {
+                    if (badge) badge.style.display = 'none';
+                    if (timeEl) timeEl.textContent = '';
+                    currentSessionData.hasDriver = false;
+                }
+                updateCurrentSessionRow();
+            }).catch(function() {});
+            fetch('/api/truck/plate_snap_info').then(r => r.json()).then(function(data) {
+                const badge = document.getElementById('summaryPlateBadge');
+                const numEl = document.getElementById('summaryPlateNumber');
+                const metaEl = document.getElementById('summaryPlateMeta');
+                if (data.captured) {
+                    if (badge) badge.style.display = 'inline-block';
+                    if (numEl) numEl.textContent = data.plate || data.text || '—';
+                    if (metaEl) metaEl.textContent = (data.camera_name || '') + (data.captured_at ? ' · ' + new Date(data.captured_at).toLocaleString() : '');
+                    currentSessionData.plate = data.plate || data.text || '';
+                    currentSessionData.capturedAt = data.captured_at || null;
+                    currentSessionData.cameraName = data.camera_name || '';
+                    currentSessionData.hasPlate = true;
+                } else {
+                    if (badge) badge.style.display = 'none';
+                    if (numEl) numEl.textContent = '';
+                    if (metaEl) metaEl.textContent = '';
+                    currentSessionData.hasPlate = false;
+                }
+                updateCurrentSessionRow();
+            }).catch(function() {});
+            fetch('/api/truck/recent_plates').then(r => r.json()).then(function(plates) {
+                const listEl = document.getElementById('summaryRecentPlatesList');
+                if (!listEl) return;
+                if (!Array.isArray(plates) || plates.length === 0) {
+                    listEl.innerHTML = '<span class="lnpr-empty">No plates detected yet.</span>';
+                    return;
+                }
+                const toShow = plates.slice(-12).reverse();
+                listEl.innerHTML = toShow.map(function(p) {
+                    const timeStr = p.timestamp ? new Date(p.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+                    return '<div class="lnpr-recent-item"><span class="lnpr-recent-plate">' + (p.plate || '—') + '</span><div class="lnpr-recent-cam">' + (p.camera_name || '') + ' · ' + timeStr + '</div></div>';
+                }).join('');
+            }).catch(function() {});
+        }
+
+        // Render table
+        function renderTable(data) {
+            const tbody = document.getElementById('truckTableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="no-data">
+                            <div class="no-data-icon">📭</div>
+                            <div class="no-data-text">No truck records found</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+             tbody.innerHTML = data.map((truck, index) => {
+                 // Escape single quotes in image URLs for onclick
+                 const plateImgEscaped = truck.plateImage.replace(/'/g, "\\'");
+                 const driverImgEscaped = truck.driverImage.replace(/'/g, "\\'");
+                 
+                 return `
+                 <tr>
+                     <td>${index + 1}</td>
+                     <td><span class="plate-number">${truck.plateNumber}</span></td>
+                     <td>
+                         <div class="image-cell">
+                             <img src="${truck.plateImage}" 
+                                  alt="Plate ${truck.plateNumber}" 
+                                  class="image-preview"
+                                  onclick="openImageModal('${plateImgEscaped}')"
+                                  title="Click to view full size"
+                                  onerror="this.src='https://via.placeholder.com/300x150/e5e7eb/6b7280?text=Plate+${encodeURIComponent(truck.plateNumber)}'">
+                         </div>
+                     </td>
+                     <td>
+                         <div class="image-cell">
+                             <img src="${truck.driverImage}" 
+                                  alt="Driver" 
+                                  class="image-preview"
+                                  onclick="openImageModal('${driverImgEscaped}')"
+                                  title="Click to view full size"
+                                  onerror="this.src='https://via.placeholder.com/300x300/e5e7eb/6b7280?text=Driver'">
+                         </div>
+                     </td>
+                     <td><span class="weight-value">${truck.weight != null ? truck.weight.toLocaleString() : '—'}</span></td>
+                     <td>${truck.date}</td>
+                     <td>${truck.time}</td>
+                     <td>
+                         <span class="status-badge ${truck.status}">${truck.status}</span>
+                     </td>
+                 </tr>
+             `;
+             }).join('');
+        }
+
+        // Update summary cards from current filteredData
+        function updateSummaryCards() {
+            const totalWeight = filteredData.reduce((sum, truck) => sum + (truck.weight || 0), 0);
+            document.getElementById('totalPlates').textContent = filteredData.length;
+            document.getElementById('totalDrivers').textContent = filteredData.length;
+            document.getElementById('totalWeight').textContent = totalWeight > 0 ? totalWeight.toLocaleString() : '—';
+            document.getElementById('totalTrucks').textContent = filteredData.length;
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const month = document.getElementById('filterMonth').value;
+            const day = document.getElementById('filterDay').value;
+            const timeStart = document.getElementById('filterTimeStart').value;
+            const timeEnd = document.getElementById('filterTimeEnd').value;
+            const plate = document.getElementById('filterPlate').value.toLowerCase();
+
+            filteredData = truckData.filter(truck => {
+                // Month filter
+                if (month) {
+                    const truckMonth = truck.date.split('-')[1];
+                    if (truckMonth !== month) return false;
+                }
+
+                // Day filter
+                if (day) {
+                    if (truck.date !== day) return false;
+                }
+
+                // Time filter (support start only, end only, or both)
+                if (timeStart || timeEnd) {
+                    const truckTime = truck.time ? truck.time.split(':').slice(0, 2).join(':') : '';
+                    if (timeStart && truckTime < timeStart) return false;
+                    if (timeEnd && truckTime > timeEnd) return false;
+                }
+
+                // Plate filter
+                if (plate) {
+                    if (!truck.plateNumber.toLowerCase().includes(plate)) return false;
+                }
+
+                return true;
+            });
+
+            renderTable(filteredData);
+            updateSummaryCards();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterDay').value = '';
+            document.getElementById('filterTimeStart').value = '';
+            document.getElementById('filterTimeEnd').value = '';
+            document.getElementById('filterPlate').value = '';
+            
+            filteredData = [...truckData];
+            renderTable(filteredData);
+            updateSummaryCards();
+        }
+
+        // Open image modal
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            modal.classList.add('active');
+        }
+
+        // Close image modal
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+        }
+
+        // Close drawer when clicking outside
+        document.addEventListener('click', function(event) {
+            const drawer = document.getElementById('filterDrawer');
+            const toggleBtn = document.querySelector('.filter-toggle-btn');
+            
+            if (drawer.classList.contains('open') && 
+                !drawer.contains(event.target) && 
+                !toggleBtn.contains(event.target)) {
+                drawer.classList.remove('open');
+            }
+        });
+
+        // Download Excel file
+        async function downloadExcel() {
+            const excelBtn = document.getElementById('excelBtn');
+            const originalText = excelBtn.innerHTML;
+            
+            try {
+                excelBtn.disabled = true;
+                excelBtn.innerHTML = '<span>⏳</span><span>Generating...</span>';
+                
+                const response = await fetch('/download_truck_data_excel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        truckData: filteredData,
+                        reportDate: new Date().toISOString().split('T')[0]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to generate Excel file');
+                }
+                
+                // Get the blob and create download link
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `truck_data_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                excelBtn.innerHTML = '<span>✅</span><span>Downloaded!</span>';
+                setTimeout(() => {
+                    excelBtn.innerHTML = originalText;
+                    excelBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                alert('Error downloading Excel file: ' + error.message);
+                excelBtn.innerHTML = originalText;
+                excelBtn.disabled = false;
+            }
+        }
+
+        // Download PDF report
+        async function downloadPDF() {
+            const pdfBtn = document.getElementById('pdfBtn');
+            const originalText = pdfBtn.innerHTML;
+            
+            try {
+                pdfBtn.disabled = true;
+                pdfBtn.innerHTML = '<span>⏳</span><span>Generating...</span>';
+                
+                const response = await fetch('/download_truck_data_pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        truckData: filteredData,
+                        reportDate: new Date().toISOString().split('T')[0]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to generate PDF file');
+                }
+                
+                // Get the blob and create download link
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `truck_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                pdfBtn.innerHTML = '<span>✅</span><span>Downloaded!</span>';
+                setTimeout(() => {
+                    pdfBtn.innerHTML = originalText;
+                    pdfBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                alert('Error downloading PDF file: ' + error.message);
+                pdfBtn.innerHTML = originalText;
+                pdfBtn.disabled = false;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
+

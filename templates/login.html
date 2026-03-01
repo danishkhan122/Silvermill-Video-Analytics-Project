@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - SilverMill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', 'Poppins', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 32px 56px;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+            animation: particleFloat 16s infinite ease-in-out;
+        }
+        .particle:nth-child(1) { width: 5px; height: 5px; left: 8%; animation-delay: 0s; animation-duration: 18s; }
+        .particle:nth-child(2) { width: 4px; height: 4px; left: 22%; animation-delay: 2s; animation-duration: 14s; }
+        .particle:nth-child(3) { width: 6px; height: 6px; left: 42%; animation-delay: 1s; animation-duration: 20s; }
+        .particle:nth-child(4) { width: 4px; height: 4px; left: 62%; animation-delay: 3s; animation-duration: 16s; }
+        .particle:nth-child(5) { width: 5px; height: 5px; left: 88%; animation-delay: 0.5s; animation-duration: 22s; }
+        .particle:nth-child(6) { width: 3px; height: 3px; left: 15%; animation-delay: 4s; animation-duration: 13s; }
+        .particle:nth-child(7) { width: 5px; height: 5px; left: 55%; animation-delay: 2.5s; animation-duration: 19s; }
+        .particle:nth-child(8) { width: 4px; height: 4px; left: 78%; animation-delay: 1.5s; animation-duration: 17s; }
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            8% { opacity: 0.5; }
+            92% { opacity: 0.5; }
+            100% { transform: translateY(-80px) translateX(20px) scale(1); opacity: 0; }
+        }
+
+        /* Background: coconut image low center, full page; blue overlay on top */
+        .login-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            background-image: url("{{ url_for('static', filename='images/coconut.jpg') }}");
+            background-position: center bottom;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .login-bg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30, 64, 175, 0.72);
+            z-index: 1;
+        }
+        .login-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, transparent 40%, transparent 60%, rgba(15, 23, 42, 0.25) 100%);
+            z-index: 2;
+        }
+
+        /* Technology background animation layer */
+        .tech-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        /* Animated grid */
+        .tech-grid {
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background-image:
+                linear-gradient(rgba(96, 165, 250, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(96, 165, 250, 0.06) 1px, transparent 1px);
+            background-size: 48px 48px;
+            animation: techGridMove 8s linear infinite;
+        }
+        @keyframes techGridMove {
+            0% { transform: perspective(400px) rotateX(55deg) translateY(0); }
+            100% { transform: perspective(400px) rotateX(55deg) translateY(48px); }
+        }
+        /* Glow nodes */
+        .tech-node {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(147, 197, 253, 0.5) 0%, rgba(59, 130, 246, 0.2) 40%, transparent 70%);
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.3), 0 0 40px rgba(59, 130, 246, 0.15);
+            animation: techNodeFloat 4s infinite ease-in-out;
+        }
+        .tech-node:nth-child(1) { width: 12px; height: 12px; left: 12%; top: 20%; animation-delay: 0s; animation-duration: 5s; }
+        .tech-node:nth-child(2) { width: 8px; height: 8px; left: 28%; top: 70%; animation-delay: 0.5s; animation-duration: 4s; }
+        .tech-node:nth-child(3) { width: 14px; height: 14px; left: 75%; top: 25%; animation-delay: 0.25s; animation-duration: 5.5s; }
+        .tech-node:nth-child(4) { width: 10px; height: 10px; left: 85%; top: 65%; animation-delay: 0.75s; animation-duration: 4.5s; }
+        .tech-node:nth-child(5) { width: 6px; height: 6px; left: 45%; top: 15%; animation-delay: 0.15s; animation-duration: 3.5s; }
+        .tech-node:nth-child(6) { width: 10px; height: 10px; left: 55%; top: 80%; animation-delay: 0.6s; animation-duration: 5s; }
+        .tech-node:nth-child(7) { width: 8px; height: 8px; left: 8%; top: 50%; animation-delay: 0.4s; animation-duration: 4s; }
+        .tech-node:nth-child(8) { width: 12px; height: 12px; left: 92%; top: 45%; animation-delay: 0.2s; animation-duration: 5s; }
+        @keyframes techNodeFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+            25% { transform: translate(15px, -20px) scale(1.1); opacity: 1; }
+            50% { transform: translate(-10px, 10px) scale(0.95); opacity: 0.8; }
+            75% { transform: translate(20px, 15px) scale(1.05); opacity: 0.9; }
+        }
+        /* Horizontal scan lines */
+        .tech-scan {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(59, 130, 246, 0.03) 2px,
+                rgba(59, 130, 246, 0.03) 4px
+            );
+            animation: techScan 3s linear infinite;
+        }
+        @keyframes techScan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100px); }
+        }
+        /* Floating circuit lines (thin diagonal rays) */
+        .tech-lines {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.4;
+        }
+        .tech-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(147, 197, 253, 0.4), transparent);
+            transform-origin: left center;
+            animation: techLinePulse 1.5s ease-in-out infinite;
+        }
+        .tech-line:nth-child(1) { width: 30%; left: 5%; top: 30%; transform: rotate(-15deg); animation-delay: 0s; }
+        .tech-line:nth-child(2) { width: 25%; left: 70%; top: 20%; transform: rotate(20deg); animation-delay: 0.5s; }
+        .tech-line:nth-child(3) { width: 20%; left: 60%; top: 75%; transform: rotate(-25deg); animation-delay: 1s; }
+        .tech-line:nth-child(4) { width: 28%; left: 15%; top: 60%; transform: rotate(10deg); animation-delay: 1.5s; }
+        .tech-line:nth-child(5) { width: 22%; left: 40%; top: 40%; transform: rotate(5deg); animation-delay: 2s; }
+        @keyframes techLinePulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Logo inside form card - SilverMill from static/images/logo.png */
+        .login-card-logo {
+            text-align: center;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card-logo img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            max-height: 110px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            filter: drop-shadow(0 2px 16px rgba(0, 0, 0, 0.25));
+        }
+        .login-card-footer .powered {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        /* Login card - big, centered, blue & white gradient */
+        .login-center {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .login-card {
+            background: linear-gradient(165deg, #ffffff 0%, #eff6ff 35%, #dbeafe 70%, #bfdbfe 100%);
+            border-radius: 24px;
+            padding: 40px 40px 38px;
+            min-height: 460px;
+            box-shadow: 0 24px 56px rgba(30, 64, 175, 0.25),
+                        0 0 0 1px rgba(255, 255, 255, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
+            background-size: 200% 100%;
+            animation: lineShift 6s ease infinite;
+        }
+        @keyframes lineShift {
+            0%, 100% { background-position: 0% 0; }
+            50% { background-position: 100% 0; }
+        }
+        .login-card h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
+        .login-card .subtitle {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 24px;
+            line-height: 1.45;
+            text-align: center;
+        }
+        .login-form .form-group {
+            margin-bottom: 18px;
+        }
+        .login-form label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid #bfdbfe;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.9);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .login-form input::placeholder {
+            color: #64748b;
+        }
+        .login-form input:hover {
+            border-color: #93c5fd;
+        }
+        .login-form input:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.2);
+        }
+        .login-form .error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: #b91c1c;
+            font-size: 13px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(185, 28, 28, 0.2);
+        }
+        .login-form button {
+            width: 100%;
+            padding: 14px 18px;
+            margin-top: 6px;
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+            background-size: 200% 100%;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, background-position 0.4s;
+            letter-spacing: 0.02em;
+            box-shadow: 0 3px 12px rgba(30, 64, 175, 0.35);
+        }
+        .login-form button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.45);
+            background-position: 100% 0;
+        }
+        .login-form button:active {
+            transform: translateY(0);
+        }
+        .login-card-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(30, 64, 175, 0.2);
+            text-align: center;
+        }
+        .login-card-footer .logo1-wrap {
+            display: inline-block;
+        }
+        .login-card-footer img {
+            max-height: 40px;
+            width: auto;
+            object-fit: contain;
+            opacity: 0.9;
+        }
+
+        /* Responsive: form stays big, adjusts on narrow screens */
+        @media (max-width: 520px) {
+            body { padding: 32px 16px 40px; }
+            .login-center { max-width: 100%; padding: 0 16px; }
+            .login-card { padding: 32px 24px 28px; border-radius: 20px; }
+            .login-card h1 { font-size: 24px; }
+            .login-card .subtitle { font-size: 13px; margin-bottom: 20px; }
+            .login-form .form-group { margin-bottom: 16px; }
+            .login-form input { padding: 13px 14px; font-size: 16px; }
+            .login-form button { padding: 14px; font-size: 15px; }
+            .login-card { min-height: 380px; }
+            .login-card-logo { margin-bottom: 20px; }
+            .login-card-logo img { max-width: 300px; max-height: 85px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-bg"></div>
+    <div class="tech-bg">
+        <div class="tech-grid"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-node"></div>
+        <div class="tech-scan"></div>
+        <div class="tech-lines">
+            <div class="tech-line"></div>
+            <div class="tech-line"></div>
+            <div class="tech-line"></div>
+            <div class="tech-line"></div>
+            <div class="tech-line"></div>
+        </div>
+    </div>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="login-center">
+        <div class="login-card">
+            <div class="login-card-logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SilverMill">
+            </div>
+            <h1>Sign in</h1>
+            <p class="subtitle">Enter your credentials to access the dashboard.</p>
+            <form class="login-form" method="post" action="{{ url_for('login') }}">
+                {% if error %}
+                <div class="error">{{ error }}</div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit">Sign in</button>
+            </form>
+            <div class="login-card-footer">
+                <div class="logo1-wrap">
+                    <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Invexal LLC">
+                </div>
+                <div class="powered">Powered by Invexal LLC</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
