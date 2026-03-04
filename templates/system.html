@@ -68,6 +68,15 @@
         .event-icon.info { background: #dbeafe; color: #1e40af; }
         .event-msg { flex: 1; font-weight: 500; color: #1a1a2e; }
         .event-time { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+        .model-updates-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
+        .model-updates-title { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 10px; }
+        .model-updates-list { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .model-updates-empty { padding: 12px; text-align: center; color: #9ca3af; font-size: 12px; }
+        .model-update-entry { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f9fafb; border-radius: 6px; font-size: 11px; border-left: 3px solid #d1d5db; }
+        .model-update-entry.start { border-left-color: #10b981; }
+        .model-update-entry.stop { border-left-color: #6b7280; }
+        .model-update-entry .upd-msg { flex: 1; font-weight: 500; color: #1a1a2e; }
+        .model-update-entry .upd-time { color: #9ca3af; white-space: nowrap; }
         .sys-card.highlight { border-left-color: #10b981; }
         .sys-card.warning { border-left-color: #f59e0b; }
         .sys-subtitle { font-size: 12px; color: #6b7280; margin-bottom: 12px; font-weight: 500; }
@@ -76,6 +85,16 @@
         .filter-row input[type="date"], .filter-row select { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 12px; }
         .filter-row button { padding: 8px 16px; background: #6a11cb; color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .filter-row button:hover { background: #5a0fb3; }
+        .report-dl-btn {
+            display: inline-block; padding: 10px 18px; background: #10b981; color: #fff; text-decoration: none;
+            border-radius: 8px; font-weight: 600; font-size: 12px; transition: background 0.2s;
+        }
+        .report-dl-btn:hover { background: #059669; color: #fff; }
+        .report-dl-btn + .report-dl-btn { margin-left: 12px; }
+        .report-period-row .report-optional { margin-left: 8px; }
+        .report-period-row select#reportPeriod { min-width: 120px; }
+        .report-period-row select#reportMonth { min-width: 100px; }
+        .report-period-row select#reportYear { min-width: 80px; }
         .history-list { max-height: 450px; overflow-y: auto; }
     </style>
 </head>
@@ -130,11 +149,34 @@
             </div>
             <div class="sys-card highlight">
                 <h2>Coconut Model Usage</h2>
-                <div class="sys-subtitle">Admin view: how many times the coconut counting model has been started and how long it has been running.</div>
+                <div class="sys-subtitle">How many times the coconut model has been turned on and off. Each start/stop is recorded.</div>
                 <div class="sys-grid" id="coconutModelGrid">
-                    <div class="sys-item"><div class="sys-item-label">Times model started (lifetime)</div><div class="sys-item-value" id="coconutModelStartCount">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Times turned ON (lifetime)</div><div class="sys-item-value" id="coconutModelStartCount">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Times turned OFF (lifetime)</div><div class="sys-item-value" id="coconutModelStopCount">—</div></div>
                     <div class="sys-item"><div class="sys-item-label">Current status</div><div class="sys-item-value" id="coconutModelStatus">—</div></div>
                     <div class="sys-item"><div class="sys-item-label">Running duration (this session)</div><div class="sys-item-value" id="coconutModelRunDuration">—</div></div>
+                </div>
+                <div class="model-updates-section">
+                    <h3 class="model-updates-title">Recent updates (each open/close)</h3>
+                    <div class="model-updates-list" id="coconutModelUpdatesList">
+                        <div class="model-updates-empty">No coconut model events yet</div>
+                    </div>
+                </div>
+            </div>
+            <div class="sys-card" style="border-left-color: #3b82f6;">
+                <h2>Truck Model Usage (LNPR / Driver)</h2>
+                <div class="sys-subtitle">How many times the truck (license plate &amp; driver) detection has been turned on and off. Each start/stop is recorded.</div>
+                <div class="sys-grid" id="truckModelGrid">
+                    <div class="sys-item"><div class="sys-item-label">Times turned ON (lifetime)</div><div class="sys-item-value" id="truckModelStartCount">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Times turned OFF (lifetime)</div><div class="sys-item-value" id="truckModelStopCount">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Current status</div><div class="sys-item-value" id="truckModelStatus">—</div></div>
+                    <div class="sys-item"><div class="sys-item-label">Running duration (this session)</div><div class="sys-item-value" id="truckModelRunDuration">—</div></div>
+                </div>
+                <div class="model-updates-section">
+                    <h3 class="model-updates-title">Recent updates (each open/close)</h3>
+                    <div class="model-updates-list" id="truckModelUpdatesList">
+                        <div class="model-updates-empty">No truck model events yet</div>
+                    </div>
                 </div>
             </div>
             <div class="sys-card warning">
@@ -154,6 +196,41 @@
                     <div style="padding:20px;text-align:center;color:#9ca3af;" id="eventsEmpty">Loading…</div>
                 </div>
             </div>
+            <div class="sys-card" style="border-left-color: #10b981;">
+                <h2>Download System Report</h2>
+                <div class="sys-subtitle">Admin: choose report period (today, monthly, or yearly) and download CSV or PDF.</div>
+                <div class="filter-row report-period-row">
+                    <label>Report period</label>
+                    <select id="reportPeriod">
+                        <option value="today">Today</option>
+                        <option value="monthly">This month</option>
+                        <option value="yearly">This year</option>
+                    </select>
+                    <span id="reportMonthWrap" class="report-optional" style="display:none;">
+                        <label>Month</label>
+                        <select id="reportMonth">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </span>
+                    <span id="reportYearWrap" class="report-optional" style="display:none;">
+                        <label>Year</label>
+                        <select id="reportYear"></select>
+                    </span>
+                    <a href="#" id="reportDownloadCsv" class="report-dl-btn" download>Download report (CSV)</a>
+                    <a href="#" id="reportDownloadPdf" class="report-dl-btn" download>Download report (PDF)</a>
+                </div>
+            </div>
             <div class="sys-card">
                 <h2>System History (from database)</h2>
                 <div class="sys-subtitle">View previous system events. Use filters and click Load history to check past activity.</div>
@@ -169,6 +246,8 @@
                         <option value="app_shutdown">Application shutdown</option>
                         <option value="coconut_model_start">Coconut model start</option>
                         <option value="coconut_model_stop">Coconut model stop</option>
+                        <option value="truck_model_start">Truck model start (ON)</option>
+                        <option value="truck_model_stop">Truck model stop (OFF)</option>
                         <option value="cache_clear">Cache clear</option>
                         <option value="general">General</option>
                     </select>
@@ -227,12 +306,58 @@
                     set('sysGpu', (d.gpu_util != null ? d.gpu_util + ' ' : '') + (d.gpu_mem_used != null && d.gpu_mem_total != null ? d.gpu_mem_used + '/' + d.gpu_mem_total + ' MB' : d.gpu_mem_used != null ? d.gpu_mem_used + ' MB' : '') || '—');
                     // Coconut model usage (from database + detection state)
                     set('coconutModelStartCount', (data.coconut_model_start_count != null ? data.coconut_model_start_count : 0).toLocaleString());
+                    set('coconutModelStopCount', (data.coconut_model_stop_count != null ? data.coconut_model_stop_count : 0).toLocaleString());
                     set('coconutModelStatus', det.enabled ? 'On' : 'Off');
                     if (det.enabled && det.started_at) {
                         var runSec = Math.floor((Date.now() - new Date(det.started_at).getTime()) / 1000);
                         set('coconutModelRunDuration', formatUptime(runSec));
                     } else {
                         set('coconutModelRunDuration', '—');
+                    }
+                    // Truck model usage (from database + truck_detection state)
+                    var truckDet = data.truck_detection || {};
+                    set('truckModelStartCount', (data.truck_model_start_count != null ? data.truck_model_start_count : 0).toLocaleString());
+                    set('truckModelStopCount', (data.truck_model_stop_count != null ? data.truck_model_stop_count : 0).toLocaleString());
+                    set('truckModelStatus', truckDet.enabled ? 'On' : 'Off');
+                    if (truckDet.enabled && truckDet.started_at) {
+                        var truckRunSec = Math.floor((Date.now() - new Date(truckDet.started_at).getTime()) / 1000);
+                        set('truckModelRunDuration', formatUptime(truckRunSec));
+                    } else {
+                        set('truckModelRunDuration', '—');
+                    }
+                    // Recent updates: coconut model (each open/close)
+                    var coconutEvents = (data.system_events || []).filter(function(e) { return e.event_type === 'coconut_model_start' || e.event_type === 'coconut_model_stop'; }).slice(-20).reverse();
+                    var coconutListEl = document.getElementById('coconutModelUpdatesList');
+                    if (coconutListEl) {
+                        coconutListEl.innerHTML = '';
+                        if (coconutEvents.length === 0) {
+                            coconutListEl.innerHTML = '<div class="model-updates-empty">No coconut model events yet</div>';
+                        } else {
+                            coconutEvents.forEach(function(ev) {
+                                var isStart = ev.event_type === 'coconut_model_start';
+                                var div = document.createElement('div');
+                                div.className = 'model-update-entry ' + (isStart ? 'start' : 'stop');
+                                div.innerHTML = '<span class="upd-msg">' + (ev.message || '').replace(/</g, '&lt;') + '</span><span class="upd-time">' + formatEventTime(ev.time) + '</span>';
+                                coconutListEl.appendChild(div);
+                            });
+                        }
+                    }
+                    // Recent updates: truck model (each open/close)
+                    var truckEvents = (data.system_events || []).filter(function(e) { return e.event_type === 'truck_model_start' || e.event_type === 'truck_model_stop'; }).slice(-20).reverse();
+                    var truckListEl = document.getElementById('truckModelUpdatesList');
+                    if (truckListEl) {
+                        truckListEl.innerHTML = '';
+                        if (truckEvents.length === 0) {
+                            truckListEl.innerHTML = '<div class="model-updates-empty">No truck model events yet</div>';
+                        } else {
+                            truckEvents.forEach(function(ev) {
+                                var isStart = ev.event_type === 'truck_model_start';
+                                var div = document.createElement('div');
+                                div.className = 'model-update-entry ' + (isStart ? 'start' : 'stop');
+                                div.innerHTML = '<span class="upd-msg">' + (ev.message || '').replace(/</g, '&lt;') + '</span><span class="upd-time">' + formatEventTime(ev.time) + '</span>';
+                                truckListEl.appendChild(div);
+                            });
+                        }
                     }
                     // Server / PC status
                     set('serverPcState', 'Running');
@@ -319,12 +444,61 @@
             if (fromEl) fromEl.value = from.toISOString().slice(0, 10);
             if (toEl) toEl.value = to.toISOString().slice(0, 10);
         }
+        function buildReportUrl(format) {
+            var period = (document.getElementById('reportPeriod') && document.getElementById('reportPeriod').value) || 'today';
+            var params = 'format=' + (format === 'pdf' ? 'pdf' : 'csv') + '&period=' + period;
+            if (period === 'monthly') {
+                var m = document.getElementById('reportMonth');
+                var y = document.getElementById('reportYear');
+                if (m) params += '&month=' + m.value;
+                if (y) params += '&year=' + y.value;
+            } else if (period === 'yearly') {
+                var y = document.getElementById('reportYear');
+                if (y) params += '&year=' + y.value;
+            }
+            return '/download_system_report?' + params;
+        }
+        function updateReportPeriodUi() {
+            var period = document.getElementById('reportPeriod');
+            var monthWrap = document.getElementById('reportMonthWrap');
+            var yearWrap = document.getElementById('reportYearWrap');
+            if (!period || !monthWrap || !yearWrap) return;
+            var v = period.value;
+            monthWrap.style.display = (v === 'monthly') ? 'inline-block' : 'none';
+            yearWrap.style.display = (v === 'monthly' || v === 'yearly') ? 'inline-block' : 'none';
+        }
+        function initReportYearOptions() {
+            var sel = document.getElementById('reportYear');
+            if (!sel) return;
+            var y = new Date().getFullYear();
+            sel.innerHTML = '';
+            for (var i = 0; i <= 5; i++) {
+                var opt = document.createElement('option');
+                opt.value = y - i;
+                opt.textContent = y - i;
+                if (i === 0) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        }
+        function setReportMonthToCurrent() {
+            var m = document.getElementById('reportMonth');
+            if (m) m.value = String(new Date().getMonth() + 1);
+        }
         updateSystemPage();
         setInterval(updateSystemPage, 3000);
         setDefaultHistoryDates();
         var loadBtn = document.getElementById('loadHistoryBtn');
         if (loadBtn) loadBtn.addEventListener('click', loadSystemHistory);
         loadSystemHistory();
+        initReportYearOptions();
+        setReportMonthToCurrent();
+        updateReportPeriodUi();
+        var reportPeriodEl = document.getElementById('reportPeriod');
+        if (reportPeriodEl) reportPeriodEl.addEventListener('change', updateReportPeriodUi);
+        var csvBtn = document.getElementById('reportDownloadCsv');
+        var pdfBtn = document.getElementById('reportDownloadPdf');
+        if (csvBtn) csvBtn.addEventListener('click', function(e) { e.preventDefault(); window.location.href = buildReportUrl('csv'); });
+        if (pdfBtn) pdfBtn.addEventListener('click', function(e) { e.preventDefault(); window.location.href = buildReportUrl('pdf'); });
     </script>
 </body>
 </html>

@@ -1067,20 +1067,16 @@
         <!-- Metrics Row -->
         <div class="metrics-row">
             <div class="metric-card">
-                <div class="metric-card-title">Last Plate Scan</div>
-                <div class="metric-card-value" id="lastPlate">—</div>
+                <div class="metric-card-title">Total Driver Face Count</div>
+                <div class="metric-card-value" id="totalDriverFaces">—</div>
             </div>
             <div class="metric-card">
-                <div class="metric-card-title">Scans/Minute</div>
-                <div class="metric-card-value" id="scansPerMin">—</div>
+                <div class="metric-card-title">Total Plates</div>
+                <div class="metric-card-value" id="totalPlates">—</div>
             </div>
             <div class="metric-card">
-                <div class="metric-card-title">Accuracy</div>
-                <div class="metric-card-value" id="accuracy">—</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-card-title">Batch ID</div>
-                <div class="metric-card-value" id="batchId">—</div>
+                <div class="metric-card-title">Total Weights</div>
+                <div class="metric-card-value" id="totalWeights">—</div>
             </div>
         </div>
 
@@ -1353,11 +1349,6 @@
                         const el = document.getElementById('detectedPlateBack');
                         if (el) el.textContent = lastBack.plate || '—';
                     }
-                    const lastAny = plates[plates.length - 1];
-                    if (lastAny) {
-                        const lastEl = document.getElementById('lastPlate');
-                        if (lastEl) lastEl.textContent = lastAny.plate || '—';
-                    }
                     // Rebuild list: keep empty message hidden, replace items
                     listEl.querySelectorAll('.recent-plate-item').forEach(n => n.remove());
                     toShow.forEach(p => {
@@ -1380,6 +1371,23 @@
         }
 
         startRecentPlatesPolling();
+
+        function updateSummaryCounts() {
+            if (document.hidden) return;
+            fetch('/api/truck/verification_summary')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var driversEl = document.getElementById('totalDriverFaces');
+                    var platesEl = document.getElementById('totalPlates');
+                    var weightsEl = document.getElementById('totalWeights');
+                    if (driversEl) driversEl.textContent = (data.total_driver_snaps != null) ? Number(data.total_driver_snaps).toLocaleString() : '—';
+                    if (platesEl) platesEl.textContent = (data.total_plates_processed != null) ? Number(data.total_plates_processed).toLocaleString() : '—';
+                    if (weightsEl) weightsEl.textContent = (data.total_weight_snaps != null) ? Number(data.total_weight_snaps).toLocaleString() : '—';
+                })
+                .catch(function() {});
+        }
+        updateSummaryCounts();
+        setInterval(updateSummaryCounts, 10000);
 
         function refreshDriverSnap() {
             var el = document.getElementById('driverSnapImg');

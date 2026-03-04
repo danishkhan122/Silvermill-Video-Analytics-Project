@@ -516,6 +516,40 @@
             margin-bottom: 20px;
         }
 
+        .summary-filter-row {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 10px;
+            border: 1px solid #bae6fd;
+        }
+
+        .summary-filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0c4a6e;
+        }
+
+        .summary-filter-select {
+            padding: 8px 12px;
+            border: 1px solid #7dd3fc;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #0c4a6e;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .summary-filter-select:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+        }
+
         .summary-stat {
             background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
             padding: 16px;
@@ -925,12 +959,34 @@
                 <!-- Count Tab -->
                 <div id="tab-count" class="tab-content active">
                     <div class="tab-summary">
+                        <div class="summary-filter-row">
+                            <span class="summary-filter-label">View by month:</span>
+                            <select class="summary-filter-select" id="summaryMonthFilter" onchange="applySummaryMonthFilter()">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                            <select class="summary-filter-select" id="summaryYearFilter" onchange="applySummaryMonthFilter()">
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
                         <div class="summary-stat">
                             <div class="summary-stat-label">Today's Count</div>
                             <div class="summary-stat-value" id="todayCount">0</div>
                         </div>
                         <div class="summary-stat">
-                            <div class="summary-stat-label">This Month Total</div>
+                            <div class="summary-stat-label" id="monthTotalLabel">This Month Total</div>
                             <div class="summary-stat-value" id="monthCount">—</div>
                         </div>
                         <div class="summary-stat" id="durationStatWrap">
@@ -1189,7 +1245,17 @@
         }
 
         // Apply filters and update tables
+        function syncSummaryFilterFromSidebar() {
+            var yEl = document.getElementById('yearFilter');
+            var mEl = document.getElementById('monthFilter');
+            var sumY = document.getElementById('summaryYearFilter');
+            var sumM = document.getElementById('summaryMonthFilter');
+            if (yEl && sumY) sumY.value = yEl.value || sumY.value;
+            if (mEl && sumM && mEl.value !== 'all') sumM.value = mEl.value;
+        }
+
         function applyFilters() {
+            syncSummaryFilterFromSidebar();
             const activeTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
             const filteredData = filterData(allData[activeTab]);
             updateTable(activeTab, filteredData);
@@ -1383,21 +1449,56 @@
             return '/api/coconut_count_history' + (q ? '?' + q : '');
         }
 
+        function getSummaryMonthYear() {
+            var yEl = document.getElementById('yearFilter');
+            var mEl = document.getElementById('monthFilter');
+            var d = new Date();
+            var year = yEl && yEl.value ? parseInt(yEl.value, 10) : d.getFullYear();
+            var month = (mEl && mEl.value && mEl.value !== 'all') ? parseInt(mEl.value, 10) : (d.getMonth() + 1);
+            return { year: year, month: month };
+        }
+
+        function applySummaryMonthFilter() {
+            var yEl = document.getElementById('summaryYearFilter');
+            var mEl = document.getElementById('summaryMonthFilter');
+            var sideYear = document.getElementById('yearFilter');
+            var sideMonth = document.getElementById('monthFilter');
+            if (yEl && sideYear) sideYear.value = yEl.value;
+            if (mEl && sideMonth) sideMonth.value = mEl.value;
+            refreshCountTable();
+        }
+
         function refreshCountTable(enabled, total, belt1, belt2, belt3, fallbackData) {
             var d = new Date();
+            var sel = getSummaryMonthYear();
+            var isCurrentMonth = (sel.year === d.getFullYear() && sel.month === d.getMonth() + 1);
+            var monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             function doRender(rows, en, t, b1, b2, b3) {
                 rows = rows || [];
                 renderCountTableBody(rows, !!en, t, b1, b2, b3);
-                var todayTotal = rows.reduce(function(s, r) {
-                    return (r.year === d.getFullYear() && r.month === d.getMonth() + 1 && r.day === d.getDate()) ? s + (Number(r.total) || 0) : s;
-                }, 0);
-                var monthTotal = rows.reduce(function(s, r) {
-                    return (r.year === d.getFullYear() && r.month === d.getMonth() + 1) ? s + (Number(r.total) || 0) : s;
-                }, 0);
+                var sideMonthEl = document.getElementById('monthFilter');
+                var monthFilterAll = !sideMonthEl || sideMonthEl.value === 'all';
+                var monthTotal = monthFilterAll
+                    ? rows.reduce(function(s, r) {
+                        return (r.year === d.getFullYear() && r.month === d.getMonth() + 1) ? s + (Number(r.total) || 0) : s;
+                    }, 0)
+                    : rows.reduce(function(s, r) { return s + (Number(r.total) || 0); }, 0);
+                var todayTotal = 0;
+                if (isCurrentMonth) {
+                    todayTotal = rows.reduce(function(s, r) {
+                        return (r.year === d.getFullYear() && r.month === d.getMonth() + 1 && r.day === d.getDate()) ? s + (Number(r.total) || 0) : s;
+                    }, 0);
+                }
                 var todayEl = document.getElementById('todayCount');
-                if (todayEl) todayEl.textContent = (en && t != null) ? t.toLocaleString() : (todayTotal > 0 ? todayTotal.toLocaleString() : '0');
+                if (todayEl) {
+                    if (isCurrentMonth && en && t != null) todayEl.textContent = t.toLocaleString();
+                    else if (isCurrentMonth) todayEl.textContent = todayTotal > 0 ? todayTotal.toLocaleString() : '0';
+                    else todayEl.textContent = '—';
+                }
                 var monthEl = document.getElementById('monthCount');
                 if (monthEl) monthEl.textContent = monthTotal > 0 ? monthTotal.toLocaleString() : '—';
+                var labelEl = document.getElementById('monthTotalLabel');
+                if (labelEl) labelEl.textContent = isCurrentMonth ? 'This Month Total' : (monthNames[sel.month] || '') + ' ' + sel.year + ' Total';
             }
             if (enabled === undefined || total === undefined) {
                 Promise.all([
@@ -1479,9 +1580,26 @@
             coconutLiveInterval = setInterval(updateCoconutLiveData, 2000);
         }
 
+        function initSummaryMonthFilter() {
+            var d = new Date();
+            var mEl = document.getElementById('summaryMonthFilter');
+            var yEl = document.getElementById('summaryYearFilter');
+            if (mEl) mEl.value = String(d.getMonth() + 1);
+            if (yEl) {
+                var y = d.getFullYear();
+                if (yEl.querySelector('option[value="' + y + '"]')) yEl.value = String(y);
+            }
+            var sideYear = document.getElementById('yearFilter');
+            var sideMonth = document.getElementById('monthFilter');
+            if (sideYear) sideYear.value = String(d.getFullYear());
+            if (sideMonth) sideMonth.value = String(d.getMonth() + 1);
+        }
+
         // Initialize on page load (data from API/DB only, no dummy data)
         document.addEventListener('DOMContentLoaded', function() {
             setActiveNavigation();
+            initSummaryMonthFilter();
+            refreshCountTable();
             const activeTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
             const filteredData = filterData(allData[activeTab]);
             updateTable(activeTab, filteredData);

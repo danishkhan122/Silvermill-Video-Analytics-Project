@@ -1325,8 +1325,8 @@
                 <div class="dashboard-card">
                     <div class="card-header">
                         <div>
-                            <div class="card-title">Daily Production Trend</div>
-                            <div class="card-subtitle">Last 7 days performance</div>
+                            <div class="card-title">Last 7 Days Overview</div>
+                            <div class="card-subtitle">Coconut count & truck verifications by day</div>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -1537,6 +1537,21 @@
                 }
             }
         });
+
+        function updateProductionChartFromApi() {
+            fetch('/api/dashboard/production_last_7_days')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (!productionChart || !data.labels) return;
+                    productionChart.data.labels = data.labels;
+                    if (productionChart.data.datasets[0]) productionChart.data.datasets[0].data = data.coconut_totals || [];
+                    if (productionChart.data.datasets[1]) productionChart.data.datasets[1].data = data.truck_counts || [];
+                    productionChart.update('none');
+                })
+                .catch(function() {});
+        }
+        updateProductionChartFromApi();
+        var productionTrendInterval = setInterval(updateProductionChartFromApi, 60000);
 
         // System Performance Chart with beautiful vibrant colors
         const performanceCtx = document.getElementById('performanceChart').getContext('2d');
@@ -1924,6 +1939,10 @@
                     clearInterval(performanceChartInterval);
                     performanceChartInterval = null;
                 }
+                if (productionTrendInterval) {
+                    clearInterval(productionTrendInterval);
+                    productionTrendInterval = null;
+                }
                 if (systemLoadInterval) {
                     clearInterval(systemLoadInterval);
                     systemLoadInterval = null;
@@ -1932,6 +1951,8 @@
                 startDashboardCoconutUpdates();
                 updatePerformanceChartFromDb();
                 if (!performanceChartInterval) performanceChartInterval = setInterval(updatePerformanceChartFromDb, 10000);
+                updateProductionChartFromApi();
+                if (!productionTrendInterval) productionTrendInterval = setInterval(updateProductionChartFromApi, 60000);
                 startSystemLoadUpdates();
             }
         });
@@ -1941,6 +1962,7 @@
             stopCameraFeeds();
             if (dashboardCoconutInterval) clearInterval(dashboardCoconutInterval);
             if (performanceChartInterval) clearInterval(performanceChartInterval);
+            if (productionTrendInterval) clearInterval(productionTrendInterval);
             if (systemLoadInterval) clearInterval(systemLoadInterval);
         });
     </script>

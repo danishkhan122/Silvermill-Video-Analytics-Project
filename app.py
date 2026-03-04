@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import time
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import io
 import json
 import os
@@ -70,6 +70,7 @@ def _log_system_event(message, level="info", event_type=None):
             "time": iso,
             "message": message,
             "level": level,
+            "event_type": event_type,
         })
         while len(_system_events) > SYSTEM_EVENTS_MAX:
             _system_events.pop(0)
@@ -277,35 +278,45 @@ TRUCK_VERIFICATION_IMAGES_MAX = 2000
 
 
 def _get_truck_verification_summary_from_db():
-    """Return counts for truck summary page: total_plates_processed, total_driver_snaps, total_trucks (same as driver_snaps)."""
+    """Return counts for truck summary page: total_plates_processed, total_driver_snaps, total_trucks, total_weight_snaps."""
     conn = _get_db_conn()
     try:
         cur = conn.execute(
             """SELECT capture_type, COUNT(*) AS n FROM truck_verification_images
-               WHERE capture_type IN ('plate_front', 'plate_back', 'driver_snap') GROUP BY capture_type"""
+               WHERE capture_type IN ('plate_front', 'plate_back', 'driver_snap', 'weight_snap') GROUP BY capture_type"""
         )
         counts = {row["capture_type"]: row["n"] for row in cur.fetchall()}
         plates = int(counts.get("plate_front", 0)) + int(counts.get("plate_back", 0))
         drivers = int(counts.get("driver_snap", 0))
+        weights = int(counts.get("weight_snap", 0))
         return {
             "total_plates_processed": plates,
             "total_driver_snaps": drivers,
             "total_trucks": drivers,
-            "total_weight": None,
+            "total_weight_snaps": weights,
+            "total_weight": weights,  # alias for truck_summary
         }
     finally:
         conn.close()
 
 
-def _get_truck_verification_records_from_db(limit=100):
-    """Return list of truck records for summary table: each from a driver_snap with matched plate_front, plate_back, weight_snap by time."""
+def _get_truck_verification_records_from_db(limit=100, from_date=None, to_date=None):
+    """Return list of truck records for summary table: each from a driver_snap with matched plate_front, plate_back, weight_snap by time.
+    from_date, to_date: optional YYYY-MM-DD strings to filter by date(created_at)."""
     conn = _get_db_conn()
     try:
-        cur = conn.execute(
-            """SELECT id, created_at FROM truck_verification_images
-               WHERE capture_type = 'driver_snap' ORDER BY created_at DESC LIMIT ?""",
-            (limit,),
-        )
+        query = """SELECT id, created_at FROM truck_verification_images
+                    WHERE capture_type = 'driver_snap'"""
+        params = []
+        if from_date:
+            query += " AND date(created_at) >= date(?)"
+            params.append(from_date)
+        if to_date:
+            query += " AND date(created_at) <= date(?)"
+            params.append(to_date)
+        query += " ORDER BY created_at DESC LIMIT ?"
+        params.append(min(limit, 2000))
+        cur = conn.execute(query, params)
         driver_rows = cur.fetchall()
         records = []
         for dr in driver_rows:
@@ -779,6 +790,7 @@ coconut_counts_lock = threading.Lock()
 
 # Truck LNPR: detection runs only when user clicks "Start detection" on the page
 truck_detection_enabled = False
+truck_detection_started_at = None  # when last turned on (for duration on System page)
 truck_detection_lock = threading.Lock()
 
 # Truck LNPR: recent number plates from cams 6 (front), 7 (back). Max 30 entries. Each: {"camera_id", "camera_name", "plate", "timestamp"}
@@ -1398,6 +1410,183 @@ def download_truck_data_pdf():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+def _truck_report_period_from_request():
+    """Parse period=daily|monthly|days and date/month/year/days. Returns (from_date, to_date, label). No yearly."""
+    period = (request.args.get("period") or "daily").strip().lower()
+    today = datetime.now().date()
+    from_date = to_date = None
+    label = "Report"
+    if period == "daily":
+        date_s = request.args.get("date")
+        if date_s:
+            try:
+                from datetime import date as date_cls
+                d = date_cls.fromisoformat(date_s)
+                from_date = to_date = d.isoformat()
+                label = "Daily " + from_date
+            except (ValueError, TypeError):
+                pass
+        if not from_date:
+            from_date = to_date = today.isoformat()
+            label = "Daily " + from_date
+    elif period == "monthly":
+        try:
+            y = int(request.args.get("year") or today.year)
+            m = int(request.args.get("month") or today.month)
+        except (TypeError, ValueError):
+            y, m = today.year, today.month
+        m = max(1, min(12, m))
+        from_date = "%04d-%02d-01" % (y, m)
+        if m == 12:
+            to_date = "%04d-12-31" % y
+        else:
+            from datetime import date as date_cls, timedelta
+            to_date = (date_cls(y, m + 1, 1) - timedelta(days=1)).isoformat()
+        month_names = ("", "January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December")
+        label = "%s %s" % (month_names[m], y)
+    elif period == "days":
+        try:
+            n = int(request.args.get("days") or 7)
+            n = max(1, min(365, n))
+        except (TypeError, ValueError):
+            n = 7
+        from datetime import timedelta
+        to_date = today.isoformat()
+        from_date = (today - timedelta(days=n - 1)).isoformat()
+        label = "Last %d days" % n
+    else:
+        from_date = to_date = today.isoformat()
+        label = "Daily " + from_date
+    return from_date, to_date, label
+
+
+@app.route("/download_truck_report_pdf")
+def download_truck_report_pdf():
+    """Download truck summary PDF by period: period=daily&date=YYYY-MM-DD, or period=monthly&month=M&year=Y, or period=days&days=N. No yearly."""
+    if not REPORTLAB_AVAILABLE:
+        return jsonify({"error": "reportlab not installed. pip install reportlab"}), 500
+    from_date, to_date, label = _truck_report_period_from_request()
+    try:
+        records = _get_truck_verification_records_from_db(limit=2000, from_date=from_date, to_date=to_date)
+    except Exception as e:
+        return jsonify({"error": "Failed to load truck data: " + str(e)}), 500
+
+    def _pdf_image_or_placeholder(img_id, w, h):
+        """Return a ReportLab Image flowable from DB blob, or Paragraph 'No image' if missing."""
+        if not img_id:
+            return Paragraph("<font size=6>No image</font>", ParagraphStyle("Tiny", fontName="Helvetica", fontSize=6, alignment=1))
+        data, _ = _get_truck_verification_image_by_id(img_id)
+        if data:
+            try:
+                return Image(io.BytesIO(data), width=w, height=h)
+            except Exception:
+                return Paragraph("<font size=6>No image</font>", ParagraphStyle("Tiny", fontName="Helvetica", fontSize=6, alignment=1))
+        return Paragraph("<font size=6>No image</font>", ParagraphStyle("Tiny", fontName="Helvetica", fontSize=6, alignment=1))
+
+    img_w_plate = 1.0 * inch
+    img_h_plate = 0.5 * inch
+    img_w_driver = 0.65 * inch
+    img_h_driver = 0.65 * inch
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    elements = []
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        "CustomTitle",
+        parent=styles["Heading1"],
+        fontSize=20,
+        textColor=colors.HexColor("#1e40af"),
+        alignment=1,
+        spaceAfter=6,
+    )
+    subtitle_style = ParagraphStyle(
+        "SubTitle",
+        parent=styles["Normal"],
+        fontSize=9,
+        textColor=colors.HexColor("#6b7280"),
+        alignment=1,
+        spaceAfter=20,
+    )
+    elements.append(Paragraph("Truck Summary Report", title_style))
+    elements.append(Paragraph("%s &middot; Generated %s" % (label, datetime.now().strftime("%Y-%m-%d %H:%M")), subtitle_style))
+    table_data = [["#", "Number Plate", "Plate Image", "Driver Image", "Weight (kg)", "Date", "Time", "Status"]]
+    for idx, r in enumerate(records, 1):
+        plate_number = (r.get("plate_front_text") or r.get("plate_back_text") or "").strip() or "—"
+        created_at = r.get("created_at")
+        if created_at:
+            try:
+                dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                if dt.tzinfo:
+                    dt = dt.replace(tzinfo=None)
+                date_str = dt.strftime("%Y-%m-%d")
+                time_str = dt.strftime("%H:%M:%S")
+            except Exception:
+                date_str = created_at[:10] if len(created_at) >= 10 else "—"
+                time_str = created_at[11:19] if len(created_at) >= 19 else "—"
+        else:
+            date_str = time_str = "—"
+        plate_id = r.get("plate_front_id") or r.get("plate_back_id")
+        driver_id = r.get("driver_snap_id")
+        table_data.append([
+            str(idx),
+            plate_number,
+            _pdf_image_or_placeholder(plate_id, img_w_plate, img_h_plate),
+            _pdf_image_or_placeholder(driver_id, img_w_driver, img_h_driver),
+            "0",
+            date_str,
+            time_str,
+            "COMPLETED",
+        ])
+    col_widths = [0.35*inch, 1.15*inch, img_w_plate + 0.1*inch, img_w_driver + 0.1*inch, 0.6*inch, 0.85*inch, 0.65*inch, 0.7*inch]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+        ("TOPPADDING", (0, 0), (-1, 0), 10),
+        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#374151")),
+        ("LINEBELOW", (0, 0), (-1, 0), 1.5, colors.HexColor("#1e3a8a")),
+        ("LINEABOVE", (0, 1), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#d1d5db")),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#fafafa")),
+        ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor("#1f2937")),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE", (0, 1), (1, -1), 9),
+        ("FONTSIZE", (4, 1), (-1, -1), 8),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f9fafb")]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("TOPPADDING", (2, 0), (3, -1), 6),
+        ("BOTTOMPADDING", (2, 0), (3, -1), 6),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 0.35*inch))
+    summary_style = ParagraphStyle(
+        "Summary",
+        parent=styles["Normal"],
+        fontSize=11,
+        textColor=colors.HexColor("#374151"),
+        leftIndent=0,
+        spaceAfter=0,
+    )
+    summary_text = "<b>Total Trucks:</b> %s" % len(records)
+    elements.append(Paragraph(summary_text, summary_style))
+    doc.build(elements)
+    buffer.seek(0)
+    safe_label = "".join(c if c.isalnum() or c in "-_" else "_" for c in label)
+    filename = "truck_report_%s_%s.pdf" % (safe_label.replace(" ", "_"), datetime.now().strftime("%Y-%m-%d_%H%M"))
+    return send_file(buffer, mimetype="application/pdf", as_attachment=True, download_name=filename)
+
+
 # ---------------- Video Feed Routes ----------------
 @app.route("/video_feed/<int:cam_id>")
 def video_feed(cam_id):
@@ -1435,18 +1624,24 @@ def truck_video_feed(cam_id):
 @app.route("/api/truck/detection/start", methods=["POST"])
 def api_truck_detection_start():
     """Enable truck LNPR/driver detection (ALPR on 6/7, person on 8). Model runs only when enabled."""
-    global truck_detection_enabled
+    global truck_detection_enabled, truck_detection_started_at
     with truck_detection_lock:
         truck_detection_enabled = True
+        truck_detection_started_at = datetime.now()
+    start_count = _inc_system_stat("truck_model_start_count")
+    _log_system_event("Truck (LNPR/Driver) detection model started (start #%d)." % start_count, "success", event_type="truck_model_start")
     return jsonify({"ok": True, "enabled": True})
 
 
 @app.route("/api/truck/detection/stop", methods=["POST"])
 def api_truck_detection_stop():
     """Disable truck LNPR/driver detection; feeds continue with raw video only."""
-    global truck_detection_enabled
+    global truck_detection_enabled, truck_detection_started_at
     with truck_detection_lock:
         truck_detection_enabled = False
+        truck_detection_started_at = None
+    stop_count = _inc_system_stat("truck_model_stop_count")
+    _log_system_event("Truck (LNPR/Driver) detection model stopped (stop #%d)." % stop_count, "info", event_type="truck_model_stop")
     return jsonify({"ok": True, "enabled": False})
 
 
@@ -1547,7 +1742,8 @@ def api_truck_verification_summary():
             "total_plates_processed": 0,
             "total_driver_snaps": 0,
             "total_trucks": 0,
-            "total_weight": None,
+            "total_weight_snaps": 0,
+            "total_weight": 0,
         })
 
 
@@ -1633,7 +1829,8 @@ def api_coconut_detection_set():
                 _log_system_event("Coconut detection model started.", "success", event_type="coconut_model_start")
         else:
             coconut_detection_started_at = None
-            _log_system_event("Coconut detection model stopped.", "info", event_type="coconut_model_stop")
+            stop_count = _inc_system_stat("coconut_model_stop_count")
+            _log_system_event("Coconut detection model stopped (stop #%d)." % stop_count, "info", event_type="coconut_model_stop")
     if enabled:
         _append_coconut_count_snapshot()
     if not enabled:
@@ -1657,6 +1854,55 @@ def api_coconut_today_summary():
             "belt2_today": 0,
             "belt3_today": 0,
             "accuracy": "—",
+        })
+
+
+def _get_production_last_7_days():
+    """Return last 7 days (oldest to newest) with daily coconut total and daily truck (driver_snap) count for dashboard chart."""
+    today = date.today()
+    days = [today - timedelta(days=i) for i in range(6, -1, -1)]  # 7 days: 6 days ago .. today
+    labels = [d.strftime("%d %b") for d in days]
+    date_strs = [d.isoformat() for d in days]
+    coconut_totals = [0] * 7
+    truck_counts = [0] * 7
+    conn = _get_db_conn()
+    try:
+        # Coconut: sum(total) per (year, month, day) for these 7 days
+        for i, d in enumerate(days):
+            cur = conn.execute(
+                """SELECT COALESCE(SUM(total), 0) AS s FROM coconut_count_history
+                   WHERE year = ? AND month = ? AND day = ?""",
+                (d.year, d.month, d.day),
+            )
+            row = cur.fetchone()
+            coconut_totals[i] = int(row["s"] or 0)
+        # Truck driver_snap count per date(created_at)
+        for i, d in enumerate(days):
+            cur = conn.execute(
+                """SELECT COUNT(*) AS n FROM truck_verification_images
+                   WHERE capture_type = 'driver_snap' AND date(created_at) = ?""",
+                (date_strs[i],),
+            )
+            row = cur.fetchone()
+            truck_counts[i] = int(row["n"] or 0)
+        return {"labels": labels, "coconut_totals": coconut_totals, "truck_counts": truck_counts}
+    finally:
+        conn.close()
+
+
+@app.route("/api/dashboard/production_last_7_days")
+def api_dashboard_production_last_7_days():
+    """Return last 7 days daily coconut totals and truck verification counts for dashboard chart."""
+    try:
+        return jsonify(_get_production_last_7_days())
+    except Exception as e:
+        print(f"[api] dashboard production_last_7_days error: {e}")
+        today = date.today()
+        days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+        return jsonify({
+            "labels": [d.strftime("%d %b") for d in days],
+            "coconut_totals": [0] * 7,
+            "truck_counts": [0] * 7,
         })
 
 
@@ -1689,6 +1935,330 @@ def api_system_events_history():
     except Exception as e:
         print(f"[api] system_events_history error: {e}")
         return jsonify({"events": []})
+
+
+def _build_system_report_data(from_date=None, to_date=None, period_label=None):
+    """Gather current system state and recent events for report download. Returns dict.
+    from_date, to_date: YYYY-MM-DD to filter events; if both None, last 500 events.
+    period_label: e.g. 'Today 2025-02-27', 'February 2025', 'Year 2025' for report title/filename."""
+    load = get_system_load()
+    with coconut_detection_lock:
+        coco_enabled = coconut_detection_enabled
+        coco_started_at = coconut_detection_started_at
+    with truck_detection_lock:
+        truck_enabled = truck_detection_enabled
+        truck_started_at = truck_detection_started_at
+    uptime_sec = (_app_started_at and (datetime.now() - _app_started_at).total_seconds()) or 0
+    coco_start = int(_get_system_stat("coconut_model_start_count", "0"))
+    coco_stop = int(_get_system_stat("coconut_model_stop_count", "0"))
+    truck_start = int(_get_system_stat("truck_model_start_count", "0"))
+    truck_stop = int(_get_system_stat("truck_model_stop_count", "0"))
+    events = _get_system_events_history_from_db(from_date=from_date, to_date=to_date, limit=2000)
+    last_shutdown = None
+    try:
+        _instance_dir = os.path.join(os.path.dirname(_db_path), "last_shutdown.txt")
+        if os.path.isfile(_instance_dir):
+            with open(_instance_dir, "r") as f:
+                last_shutdown = f.read().strip() or None
+    except Exception:
+        pass
+    return {
+        "generated_at": datetime.now().isoformat(),
+        "period_label": period_label or "Full history",
+        "project": {"name": "SilverMill", "version": "v2.1.0", "build": "2024.12"},
+        "system": {"platform": sys.platform, "python": sys.version.split()[0]},
+        "load": load,
+        "uptime_seconds": int(uptime_sec),
+        "app_started_at": _app_started_at.isoformat() if _app_started_at else None,
+        "last_shutdown_at": last_shutdown,
+        "coconut_model": {"start_count": coco_start, "stop_count": coco_stop, "enabled": coco_enabled, "started_at": coco_started_at.isoformat() if coco_started_at else None},
+        "truck_model": {"start_count": truck_start, "stop_count": truck_stop, "enabled": truck_enabled, "started_at": truck_started_at.isoformat() if truck_started_at else None},
+        "events": events,
+    }
+
+
+def _report_period_from_request():
+    """Parse period=today|monthly|yearly and optional month, year. Returns (from_date, to_date, period_label) for report."""
+    period = (request.args.get("period") or "today").strip().lower()
+    today = datetime.now().date()
+    from_date = to_date = None
+    period_label = "Full history"
+    if period == "today":
+        from_date = to_date = today.isoformat()
+        period_label = "Today %s" % from_date
+    elif period == "monthly":
+        try:
+            y = int(request.args.get("year") or today.year)
+            m = int(request.args.get("month") or today.month)
+        except (TypeError, ValueError):
+            y, m = today.year, today.month
+        m = max(1, min(12, m))
+        from_date = "%04d-%02d-01" % (y, m)
+        if m == 12:
+            to_date = "%04d-12-31" % y
+        else:
+            from datetime import date as date_cls, timedelta
+            last_day = date_cls(y, m + 1, 1) - timedelta(days=1)
+            to_date = last_day.isoformat()
+        month_names = ("", "January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December")
+        period_label = "%s %s" % (month_names[m], y)
+    elif period == "yearly":
+        try:
+            y = int(request.args.get("year") or today.year)
+        except (TypeError, ValueError):
+            y = today.year
+        from_date = "%04d-01-01" % y
+        to_date = "%04d-12-31" % y
+        period_label = "Year %s" % y
+    return from_date, to_date, period_label
+
+
+@app.route("/download_system_report")
+def download_system_report():
+    """Admin: download system report as CSV or PDF.
+    Query: format=csv|pdf, period=today|monthly|yearly, month=1-12 (for monthly), year=YYYY (for monthly/yearly)."""
+    fmt = (request.args.get("format") or "csv").strip().lower()
+    if fmt not in ("csv", "pdf"):
+        fmt = "csv"
+    from_date, to_date, period_label = _report_period_from_request()
+    try:
+        data = _build_system_report_data(from_date=from_date, to_date=to_date, period_label=period_label)
+    except Exception as e:
+        print(f"[download_system_report] build error: {e}")
+        return jsonify({"error": "Failed to build report"}), 500
+    safe_label = "".join(c if c.isalnum() or c in "-_" else "_" for c in period_label)
+    if fmt == "csv":
+        buffer = io.BytesIO()
+        writer = io.TextIOWrapper(buffer, encoding="utf-8-sig", newline="")
+        writer.write("SilverMill System Report - %s\r\n" % data["period_label"])
+        writer.write("Generated,%s\r\n" % data["generated_at"])
+        writer.write("\r\n")
+        writer.write("Project,%s\r\n" % data["project"]["name"])
+        writer.write("Version,%s\r\n" % data["project"]["version"])
+        writer.write("Build,%s\r\n" % data["project"]["build"])
+        writer.write("Platform,%s\r\n" % data["system"]["platform"])
+        writer.write("Python,%s\r\n" % data["system"]["python"])
+        writer.write("Uptime (seconds),%s\r\n" % data["uptime_seconds"])
+        writer.write("App started at,%s\r\n" % (data["app_started_at"] or ""))
+        writer.write("Last shutdown at,%s\r\n" % (data["last_shutdown_at"] or ""))
+        writer.write("\r\n")
+        writer.write("Coconut model start count (times on),%s\r\n" % data["coconut_model"]["start_count"])
+        writer.write("Coconut model stop count (times off),%s\r\n" % data["coconut_model"]["stop_count"])
+        writer.write("Coconut model status,%s\r\n" % ("On" if data["coconut_model"]["enabled"] else "Off"))
+        writer.write("Coconut model started at,%s\r\n" % (data["coconut_model"]["started_at"] or ""))
+        writer.write("\r\n")
+        writer.write("Truck model start count (times on),%s\r\n" % data["truck_model"]["start_count"])
+        writer.write("Truck model stop count (times off),%s\r\n" % data["truck_model"]["stop_count"])
+        writer.write("Truck model status,%s\r\n" % ("On" if data["truck_model"]["enabled"] else "Off"))
+        writer.write("Truck model started at,%s\r\n" % (data["truck_model"]["started_at"] or ""))
+        writer.write("\r\n")
+        writer.write("CPU %%,%s\r\n" % (data["load"].get("cpu_pct") if data["load"].get("cpu_pct") is not None else ""))
+        writer.write("RAM %%,%s\r\n" % (data["load"].get("ram_pct") if data["load"].get("ram_pct") is not None else ""))
+        writer.write("GPU,,%s\r\n" % (data["load"].get("gpu_util") or data["load"].get("gpu_mem_used") or ""))
+        writer.write("\r\n")
+        writer.write("Event Type,Message,Level,Created At\r\n")
+        for ev in data["events"]:
+            msg = (ev.get("message") or "").replace("\r", " ").replace("\n", " ")
+            writer.write("%s,%s,%s,%s\r\n" % (ev.get("event_type", ""), msg, ev.get("level", ""), ev.get("time", "")))
+        writer.flush()
+        buffer.seek(0)
+        filename = "system_report_%s_%s.csv" % (safe_label.replace(" ", "_"), datetime.now().strftime("%Y-%m-%d_%H%M"))
+        return send_file(buffer, mimetype="text/csv", as_attachment=True, download_name=filename)
+    else:
+        if not REPORTLAB_AVAILABLE:
+            return jsonify({"error": "PDF requires reportlab. pip install reportlab"}), 500
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch, leftMargin=0.5*inch, rightMargin=0.5*inch)
+        styles = getSampleStyleSheet()
+        elements = []
+        elements.append(Paragraph("SilverMill System Report", styles["Title"]))
+        elements.append(Spacer(1, 0.15*inch))
+        # Table: Report info
+        tbl_report = Table([
+            ["Report period", data["period_label"]],
+            ["Generated", data["generated_at"]],
+        ], colWidths=[2*inch, 4*inch])
+        tbl_report.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#e5e7eb")),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(tbl_report)
+        elements.append(Spacer(1, 0.25*inch))
+        # Table: Project & System
+        tbl_project = Table([
+            ["Item", "Value"],
+            ["Project", data["project"]["name"]],
+            ["Version", data["project"]["version"]],
+            ["Build", data["project"]["build"]],
+            ["Platform", data["system"]["platform"]],
+            ["Python", data["system"]["python"]],
+        ], colWidths=[2*inch, 4*inch])
+        tbl_project.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6a11cb")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#f3f4f6")),
+            ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(Paragraph("Project &amp; System", styles["Heading2"]))
+        elements.append(Spacer(1, 0.08*inch))
+        elements.append(tbl_project)
+        elements.append(Spacer(1, 0.2*inch))
+        # Table: Server status
+        tbl_server = Table([
+            ["Field", "Value"],
+            ["Uptime (seconds)", str(data["uptime_seconds"])],
+            ["App started at", data["app_started_at"] or "—"],
+            ["Last shutdown at", data["last_shutdown_at"] or "—"],
+        ], colWidths=[2*inch, 4*inch])
+        tbl_server.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#f3f4f6")),
+            ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(Paragraph("Server Status", styles["Heading2"]))
+        elements.append(Spacer(1, 0.08*inch))
+        elements.append(tbl_server)
+        elements.append(Spacer(1, 0.2*inch))
+        # Table: Coconut model
+        coco = data["coconut_model"]
+        tbl_coco = Table([
+            ["Field", "Value"],
+            ["Times turned ON (lifetime)", str(coco["start_count"])],
+            ["Times turned OFF (lifetime)", str(coco.get("stop_count", 0))],
+            ["Status", "On" if coco["enabled"] else "Off"],
+            ["Started at", coco["started_at"] or "—"],
+        ], colWidths=[2*inch, 4*inch])
+        tbl_coco.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#065f46")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#f3f4f6")),
+            ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(Paragraph("Coconut Model", styles["Heading2"]))
+        elements.append(Spacer(1, 0.08*inch))
+        elements.append(tbl_coco)
+        elements.append(Spacer(1, 0.2*inch))
+        # Table: Truck model
+        truck = data["truck_model"]
+        tbl_truck = Table([
+            ["Field", "Value"],
+            ["Times turned ON (lifetime)", str(truck["start_count"])],
+            ["Times turned OFF (lifetime)", str(truck["stop_count"])],
+            ["Status", "On" if truck["enabled"] else "Off"],
+            ["Started at", truck["started_at"] or "—"],
+        ], colWidths=[2*inch, 4*inch])
+        tbl_truck.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e40af")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#f3f4f6")),
+            ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(Paragraph("Truck Model (LNPR / Driver)", styles["Heading2"]))
+        elements.append(Spacer(1, 0.08*inch))
+        elements.append(tbl_truck)
+        elements.append(Spacer(1, 0.2*inch))
+        # Table: Resource (CPU / RAM / GPU)
+        load = data["load"]
+        cpu_val = str(load.get("cpu_pct")) + "%" if load.get("cpu_pct") is not None else "—"
+        ram_val = str(load.get("ram_pct")) + "%" if load.get("ram_pct") is not None else "—"
+        gpu_parts = []
+        if load.get("gpu_util") is not None:
+            gpu_parts.append(str(load["gpu_util"]))
+        if load.get("gpu_mem_used") is not None:
+            if load.get("gpu_mem_total") is not None:
+                gpu_parts.append("%s/%s MB" % (load["gpu_mem_used"], load["gpu_mem_total"]))
+            else:
+                gpu_parts.append("%s MB" % load["gpu_mem_used"])
+        gpu_val = " ".join(gpu_parts) if gpu_parts else "—"
+        tbl_res = Table([
+            ["Resource", "Value"],
+            ["CPU", cpu_val],
+            ["RAM", ram_val],
+            ["GPU", gpu_val],
+        ], colWidths=[2*inch, 4*inch])
+        tbl_res.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4b5563")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("BACKGROUND", (0, 1), (0, -1), colors.HexColor("#f3f4f6")),
+            ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(Paragraph("Resource Usage", styles["Heading2"]))
+        elements.append(Spacer(1, 0.08*inch))
+        elements.append(tbl_res)
+        elements.append(Spacer(1, 0.25*inch))
+        # Table: System events
+        elements.append(Paragraph("System Events (%s)" % data["period_label"], styles["Heading2"]))
+        elements.append(Spacer(1, 0.08*inch))
+        ev_data = [["Time", "Type", "Level", "Message"]]
+        for ev in data["events"][:200]:
+            ev_data.append([(ev.get("time") or "")[:19], ev.get("event_type", ""), ev.get("level", ""), (ev.get("message") or "")[:80]])
+        t_ev = Table(ev_data, colWidths=[inch*1.8, inch*1.2, 0.5*inch, inch*3.5])
+        t_ev.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#374151")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(t_ev)
+        doc.build(elements)
+        buffer.seek(0)
+        filename = "system_report_%s_%s.pdf" % (safe_label.replace(" ", "_"), datetime.now().strftime("%Y-%m-%d_%H%M"))
+        return send_file(buffer, mimetype="application/pdf", as_attachment=True, download_name=filename)
 
 
 @app.route("/api/coconut_count_history")
@@ -1960,6 +2530,21 @@ def api_dashboard_info():
         coconut_model_start_count = int(_get_system_stat("coconut_model_start_count", "0"))
     except Exception:
         coconut_model_start_count = 0
+    try:
+        coconut_model_stop_count = int(_get_system_stat("coconut_model_stop_count", "0"))
+    except Exception:
+        coconut_model_stop_count = 0
+    try:
+        truck_model_start_count = int(_get_system_stat("truck_model_start_count", "0"))
+    except Exception:
+        truck_model_start_count = 0
+    try:
+        truck_model_stop_count = int(_get_system_stat("truck_model_stop_count", "0"))
+    except Exception:
+        truck_model_stop_count = 0
+    with truck_detection_lock:
+        truck_enabled = truck_detection_enabled
+        truck_started_at = truck_detection_started_at
     last_shutdown_at = None
     _instance_dir = os.path.join(os.path.dirname(_db_path), "last_shutdown.txt")
     try:
@@ -1971,9 +2556,13 @@ def api_dashboard_info():
     return jsonify({
         "load": load,
         "detection": {"enabled": detection_enabled, "started_at": detection_started_at.isoformat() if detection_started_at else None},
+        "truck_detection": {"enabled": truck_enabled, "started_at": truck_started_at.isoformat() if truck_started_at else None},
         "uptime_seconds": int(uptime_sec),
         "app_started_at": _app_started_at.isoformat() if _app_started_at else None,
         "coconut_model_start_count": coconut_model_start_count,
+        "coconut_model_stop_count": coconut_model_stop_count,
+        "truck_model_start_count": truck_model_start_count,
+        "truck_model_stop_count": truck_model_stop_count,
         "last_shutdown_at": last_shutdown_at,
         "project": project,
         "database": {"ok": db_ok},
